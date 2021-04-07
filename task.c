@@ -9,6 +9,9 @@ void update_retired_instructions_task(long instructions, Task* task){
     if (task->instructions_retired > task->instructions_planned){
         task->lateness = task->instructions_retired - task->instructions_planned;
     }
+    if (task->instructions_retired >= task->instructions_real){
+        task->state = TASK_FINISHED;
+    }
 }
 
 

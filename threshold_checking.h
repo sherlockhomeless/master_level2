@@ -17,8 +17,9 @@ short check_t1(Task*);
 short check_t2_task(Task*);
 short check_tm2_task(Task*);
 
-short check_t2_process(PlanProcess *);
+short check_t2_process(PlanProcess *process, long usable_buffer);
 short check_tm2_process(PlanProcess *);
+long calculate_usable_buffer(int, int, long, long, long);
 
 short check_t2_node(Plan*);
 short check_tm2_node(Plan*);

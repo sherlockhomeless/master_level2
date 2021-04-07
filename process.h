@@ -18,3 +18,4 @@ typedef struct {
 
 void update_retired_instructions_process(long instructions, PlanProcess* process);
 void update_lateness_process(long late_instructions, PlanProcess* process);
+short is_process_late(PlanProcess*);

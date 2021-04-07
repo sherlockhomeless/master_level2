@@ -26,6 +26,9 @@ Plan* parse_plan(char* plan_s, Plan* plan){
     // parse meta-section until we find ';;;'
     cur_position = parse_meta(plan_s, cur_position, plan);
     parse_tasks(plan_s, cur_position, plan);
+    plan->state = ON_PLAN;
+    plan->cur_task = plan->tasks;
+    plan->cur_process = &plan->processes[plan->cur_task->process_id];
     return plan;
 }
 
@@ -57,7 +60,9 @@ char* parse_meta(char* plan_s, char* cur_position, Plan* plan){
             long number_processes = parse_next_number(&cur_position);
             plan->num_processes = number_processes;
             PlanProcess *ptr_process_information = (PlanProcess *) malloc(number_processes * sizeof(PlanProcess));
-            plan->processes = ptr_process_information;
+            //plan->processes[0] = ptr_process_information;
+
+            plan->num_processes = number_processes;
             state = 0b1;
             cur_position++;
 
@@ -88,14 +93,19 @@ char* parse_meta(char* plan_s, char* cur_position, Plan* plan){
 }
 
 void parse_tasks(char* plan_s, char* cur_position, Plan* plan) {
+    long length_all_tasks;
     plan->num_tasks = count_tasks(cur_position);
-    plan->tasks = (Task*) malloc(plan->num_tasks * sizeof (Task));
+    length_all_tasks = plan->num_tasks + 1;
+    plan->tasks = (Task*) malloc((plan->num_tasks + 1) * sizeof (Task));
 
     for (int i = 0; i < plan->num_tasks; i++){
         cur_position = read_task(plan, i, cur_position);
         if(LOG)
             printf("task %ld: pid=%ld, length_plan=%ld @=%p\n ", plan->tasks[i].task_id, plan->tasks[i].process_id, plan->tasks[i].instructions_planned,  &plan->tasks[i]);
     }
+    Task end_task;
+    end_task.task_id = -2; //
+    plan->tasks[plan->num_tasks] = end_task;
 
 
 }
@@ -110,16 +120,22 @@ char* read_task(Plan* plan, int index, char* cur_position){
     Task cur_t;
     cur_t.lateness = 0;
     cur_t.instructions_retired = 0;
+    cur_t.state = TASK_WAITING;
+    cur_t.slot_owner = SHARES_NO_SLOT;
 
     cur_t.process_id = parse_next_number(&cur_position);
+    plan->processes[cur_t.process_id].num_tasks++;
     cur_position++;
     cur_t.task_id = parse_next_number(&cur_position);
     cur_position++;
     cur_t.instructions_planned = parse_next_number(&cur_position);
+    plan->processes[cur_t.process_id].length_plan += cur_t.instructions_planned;
     cur_position++;
     cur_t.instructions_real = parse_next_number(&cur_position);
     cur_position++;
     plan->tasks[index] = cur_t;
+
+
     return cur_position;
 }
 /*

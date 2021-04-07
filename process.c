@@ -16,3 +16,10 @@ void update_retired_instructions_process(long instructions, PlanProcess* process
 void update_lateness_process(long late_instructions, PlanProcess* process){
     process->lateness += late_instructions;
 }
+
+short is_process_late(PlanProcess* process){
+    if(process->lateness < 0)
+        return 0;
+    else
+        return 1;
+}
