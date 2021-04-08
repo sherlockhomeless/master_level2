@@ -5,11 +5,15 @@
 #include "task.h"
 
 void update_retired_instructions_task(long instructions, Task* task){
-    task->instructions_retired += instructions;
-    if (task->instructions_retired > task->instructions_planned){
-        task->lateness = task->instructions_retired - task->instructions_planned;
+    task->instructions_retired_task += instructions;
+
+    // update lateness
+    if (task->instructions_retired_task > task->instructions_planned){
+        task->lateness = task->instructions_retired_task - task->instructions_planned;
     }
-    if (task->instructions_retired >= task->instructions_real){
+    // check if finished
+    if (task->instructions_retired_task >= task->instructions_real){
+        task->lateness = task->instructions_real - task->instructions_planned;
         task->state = TASK_FINISHED;
     }
 }

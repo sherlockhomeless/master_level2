@@ -15,6 +15,7 @@ long get_file_size(FILE*);
 void test_plan_parsing(Plan*);
 void check_thresholds(Plan*);
 void check_running_first_task(Plan*);
+Task * run(Plan *p, Task * t);
 
 int main(){
 
@@ -23,16 +24,16 @@ int main(){
     test_plan_parsing(plan);
     check_thresholds(plan);
 
-
     check_running_first_task(plan);
+
     // set task 2 so it will be preempted
+    // fixme: After moving around in plan -> cur_task changes too
     cur_task = plan->cur_task;
     cur_task->instructions_real = cur_task->instructions_planned * SIGMA_T1 + 1;
     while(cur_task->state != TASK_PREEMPTED){
-        schedule(plan);
-        //todo: check if preemption call works
+       cur_task = run(plan, cur_task);
     }
-
+    printf("[MAIN] Preemption worked");
     //check preemption and moving
     return 0;
 }
@@ -45,6 +46,7 @@ void check_running_first_task(Plan* plan){
     PlanProcess* first_process;
 
     first_task = plan->cur_task;
+    first_task->instructions_real = first_task->instructions_planned + 100;
     first_process = plan->cur_process;
 
     // finish first task
@@ -54,7 +56,6 @@ void check_running_first_task(Plan* plan){
     }
     lateness_after_1_task = first_task->instructions_real - first_task->instructions_planned;
 
-    // TODO: process lateness is 0, wtf?
     printf("process lateness should be %ld, is %ld\n", lateness_after_1_task, first_process->lateness);
     printf("node lateness should be %ld, is %ld\n", lateness_after_1_task, plan->lateness);
 
@@ -66,7 +67,7 @@ void check_running_first_task(Plan* plan){
  */
 void check_thresholds(Plan* plan){
     short result;
-    result = check_t1(plan->cur_task);
+    result = check_t1(plan);
     result = check_t2_task(plan->cur_task);
     result = check_tm2_task(plan->cur_task);
 
@@ -91,8 +92,6 @@ void test_plan_parsing(Plan* plan){
 
     printf("plan (@ %p) should have 317 tasks, has %ld, last task id should be 288, is %ld \n", plan,
            plan->num_tasks, plan->tasks[plan->num_tasks-1].task_id);
-    printf(" first task ins_planned should be 172361973, is %ld\n", plan->tasks[0].instructions_planned);
-    printf(" last task ins_planned should be 426731023, is %ld\n", plan->tasks[316].instructions_planned);
 }
 
 /**
@@ -116,4 +115,17 @@ long get_file_size(FILE* fp){
     return size + 1; // to include '\0'
 }
 
-
+/**
+ * Runs schedule method and updates pointer t if plan is changed
+ * @param p
+ * @param t
+ */
+Task * run(Plan* p, Task * t){
+    long cur_task_id = t->task_id;
+    schedule(p);
+    if (cur_task_id != p->cur_task->task_id){
+        return find_task_with_task_id(p, cur_task_id);
+    } else {
+        return t;
+    }
+}

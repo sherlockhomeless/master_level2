@@ -16,7 +16,7 @@ long calculate_t1(Task* task){
     // todo: problematic conversion
     t1_relative = (long) (task->instructions_planned * SIGMA_T1);
     t1_maximum = task->instructions_planned + NO_PREEMPTION;
-    if(LOG)
+    if(0)
         printf("[t1] task %ld: instructions_planned=%ld, t1_min=%ld, t1_relative=%ld, t1_max=%ld\n", task->task_id,
                task->instructions_planned, t1_minimum, t1_relative, t1_maximum);
     if (t1_minimum > t1_relative)
@@ -29,9 +29,17 @@ long calculate_t1(Task* task){
     return t1;
 }
 
-short check_t1(Task* task) {
-    long t1 = calculate_t1(task);
-    if(task->instructions_retired >= t1){
+short check_t1(Plan* p) {
+    Task* task_to_check;
+    //task was moved and is not in original slot anymore
+    if (p->cur_task->slot_owner == SHARES_NO_SLOT){
+        //todo: stack check, is >1 one task in new slot
+        task_to_check = p->cur_task;
+    } else {
+        task_to_check =  find_task_with_task_id(p, p->cur_task->slot_owner);
+    }
+    long t1 = calculate_t1(task_to_check);
+    if(task_to_check->instructions_retired_slot >= t1){
         return T1;
     } else {
         return OK;
@@ -43,7 +51,7 @@ long calculate_t2_task(Task* task){
     t1 = calculate_t1(task);
     t2_task_min = (long) (t1 + T2_SPACER);
     t2_task_relative = (long) (task->instructions_planned * CAP_LATENESS);
-    if(LOG)
+    if(0)
         printf("[t2_task] task %ld: instructions_planned=%ld, t2_task_min=%ld, t2_task_relative=%ld\n",
                task->task_id, task->instructions_planned, t2_task_min, t2_task_relative);
 
@@ -58,14 +66,14 @@ long calculate_t2_task(Task* task){
 short check_t2_task(Task* task){
     long t2_task = calculate_t2_task(task);
     // compare
-    if (task->instructions_retired >= t2_task)
+    if (task->instructions_retired_slot >= t2_task)
         return T2;
     else
         return OK;
 }
 short check_tm2_task(Task* task){
     long tm2_task = calculate_t2_task(task) * -2;
-    if (task->instructions_retired < tm2_task && task->state == TASK_FINISHED)
+    if (task->instructions_retired_slot < tm2_task && task->state == TASK_FINISHED)
         return TM2;
     else
         return OK;

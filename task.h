@@ -12,8 +12,9 @@
 #define TASK_PREEMPTED 2
 #define TASK_SIGNALED 3
 #define TASK_FINISHED 4
+#define TASK_ABORTED 5
 
-#define SHARES_NO_SLOT 0;
+#define SHARES_NO_SLOT 0
 
 // https://stackoverflow.com/questions/3988041/how-to-define-a-typedef-struct-containing-pointers-to-itself
 typedef struct Task Task;
@@ -23,10 +24,11 @@ struct Task {
     long task_id;  // task identifier
     long instructions_planned; // instructions planned for task
     long instructions_real; // helper variable for simulating task deviations
-    long instructions_retired; // instructions run on task
+    long instructions_retired_task; // instructions run on task
+    long instructions_retired_slot; // instructions run on original slot of task
     long lateness; // lateness of task
     short state; // state of task, see defines for possible values
-    Task* slot_owner; // It task was preempted, points to owner of slot
+    long slot_owner; // ID of task in which current task runs; should be pointer for efficiency, but none trivial with task preemption and moving of tasks in memory
 };
 
 void update_retired_instructions_task(long instructions, Task* task);

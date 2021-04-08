@@ -119,7 +119,8 @@ void parse_tasks(char* plan_s, char* cur_position, Plan* plan) {
 char* read_task(Plan* plan, int index, char* cur_position){
     Task cur_t;
     cur_t.lateness = 0;
-    cur_t.instructions_retired = 0;
+    cur_t.instructions_retired_slot = 0;
+    cur_t.instructions_retired_task = 0;
     cur_t.state = TASK_WAITING;
     cur_t.slot_owner = SHARES_NO_SLOT;
 

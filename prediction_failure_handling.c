@@ -10,6 +10,7 @@ void move_preempted_task(Task preempted_task, long slot_to_move_to, Plan* p);
 
 void signal_t2(Plan* p){
     p->state = SIGNALED;
+    p->state = TASK_SIGNALED;
     printf("signaled prediction failure for process %ld", p->cur_process->process_id);
 
 }
@@ -33,7 +34,7 @@ void preempt_cur_task(Plan* p){
 
     // update
     p->cur_task->state = TASK_PREEMPTED;
-    p->cur_task->slot_owner = &p->tasks[next_slot_index + 1];
+    p->cur_task->slot_owner = p->tasks[next_slot_index+1].task_id;
     update_cur_task_process(p);
     if(LOG)
         printf("[PREEMPT_CUR_TASK] Task %ld was preempted and moved %ld slots before Task %ld\n", preempted_task.task_id,
@@ -80,6 +81,7 @@ void move_preempted_task(Task preempted_task, long slot_to_move_to, Plan* p){
         next_task_ptr = p->tasks+ i +1;
         next_task = *next_task_ptr;
         *cur_task_ptr = next_task;
+
         i++;
     }
     // insert preempted task before slot_to_move_to

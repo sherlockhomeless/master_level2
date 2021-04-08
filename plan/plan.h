@@ -28,6 +28,9 @@ typedef struct {
 Plan* parse_plan(char*, Plan*);
 void update_retired_instructions(long instructions_retired, Plan *plan);
 void update_cur_task_process(Plan*);
+Task* find_task_with_task_id(Plan* , long);
+void update_node_lateness(long , Plan* );
+
 
 
 #endif //LEVEL2_PLAN_H

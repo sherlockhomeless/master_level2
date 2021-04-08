@@ -13,7 +13,7 @@
 #define TM2 0b11
 
 
-short check_t1(Task*);
+short check_t1(Plan*);
 short check_t2_task(Task*);
 short check_tm2_task(Task*);
 
