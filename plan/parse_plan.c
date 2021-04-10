@@ -14,19 +14,18 @@
 char* parse_meta(char* plan_s, char* cur_position, Plan* plan);
 void parse_tasks(char* plan_s, char* cur_position, Plan* plan);
 
-char parse_cur_symbol(char *str);
 void parse_next_process(char** str, PlanProcess* process_information);
+char* parse_next_task(Plan* , int , char* );
+char parse_cur_symbol(char *str);
 long parse_next_number(char** str_ptr);
 long count_tasks(char* task_list);
-char* read_task(Plan* , int , char* );
 
 Plan* parse_plan(char* plan_s, Plan* plan){
-
     char* cur_position = plan_s;
     // parse meta-section until we find ';;;'
     cur_position = parse_meta(plan_s, cur_position, plan);
     parse_tasks(plan_s, cur_position, plan);
-    plan->state = ON_PLAN;
+    change_plan_state(plan, ON_PLAN);
     plan->cur_task = plan->tasks;
     plan->cur_process = &plan->processes[plan->cur_task->process_id];
     return plan;
@@ -99,16 +98,16 @@ void parse_tasks(char* plan_s, char* cur_position, Plan* plan) {
     plan->tasks = (Task*) malloc((plan->num_tasks + 1) * sizeof (Task));
 
     for (int i = 0; i < plan->num_tasks; i++){
-        cur_position = read_task(plan, i, cur_position);
+        cur_position = parse_next_task(plan, i, cur_position);
         if(LOG)
             printf("task %ld: pid=%ld, length_plan=%ld @=%p\n ", plan->tasks[i].task_id, plan->tasks[i].process_id, plan->tasks[i].instructions_planned,  &plan->tasks[i]);
     }
-    Task end_task;
-    end_task.task_id = -2; //
-    plan->tasks[plan->num_tasks] = end_task;
-
-
+    Task* end_task;
+    end_task = &plan->tasks[plan->num_tasks];
+    end_task->task_id = -2; // marks list tail
+    end_task->process_id = -2; // marks list tail
 }
+
 /**
  * Reads a task from a string into the task list on index at the given plan
  * @param plan
@@ -116,7 +115,7 @@ void parse_tasks(char* plan_s, char* cur_position, Plan* plan) {
  * @param cur_position: Pointing to the first character in the tasks process
  * @return
  */
-char* read_task(Plan* plan, int index, char* cur_position){
+char* parse_next_task(Plan* plan, int index, char* cur_position){
     Task cur_t;
     cur_t.lateness = 0;
     cur_t.instructions_retired_slot = 0;

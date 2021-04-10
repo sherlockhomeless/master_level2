@@ -20,10 +20,14 @@ void handle_free_slot(Plan*);
  * @param plan
  */
 void schedule(Plan *plan) {
+    if (plan->cur_task->task_id == -2){
+        printf("[SCHEDULE] finished running plan in %ld ticks", plan->tick_counter);
+        change_plan_state(plan, PLAN_FINISHED);
+        return;
+    }
     //todo: Just for checking:
     long retired_instructions = get_retired_instructions();
     update(retired_instructions, plan);
-    //todo:
 
     if(plan->cur_task->state == TASK_FINISHED){ // schedule() was called after a task has finished
         schedule_task_finished(plan);
@@ -81,7 +85,6 @@ void schedule_timer_tick(Plan *p){
     // --- check for t2 ---
     long usable_buffer = calculate_usable_buffer(FREE_TIME, ASSIGNABLE_BUFFER, p->cur_process->buffer, p->cur_process->length_plan,
                                                  p->cur_process->instructions_retired );
-
     if (check_t2_task(p->cur_task) || check_t2_process(p->cur_process, usable_buffer) || check_t2_node(p)){
         signal_t2(p);
     }
@@ -95,12 +98,11 @@ void schedule_timer_tick(Plan *p){
 
 
 /**
- * Switches out cur_task/process and updates states associated with it
+ * Implements a switching of tasks
  * @param p
  */
 void switch_task(Plan* p){
     Task* old_task = p->cur_task;
-    p->cur_task->state = TASK_FINISHED;
     p->tasks++;
     if (p->tasks->task_id == -1){
         handle_free_slot(p);

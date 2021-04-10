@@ -30,6 +30,7 @@ long calculate_t1(Task* task){
 }
 
 short check_t1(Plan* p) {
+
     Task* task_to_check;
     //task was moved and is not in original slot anymore
     if (p->cur_task->slot_owner == SHARES_NO_SLOT){

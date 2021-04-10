@@ -7,6 +7,7 @@
 
 #define ON_PLAN 0
 #define SIGNALED 1
+#define PLAN_FINISHED 2
 
 
 /*
@@ -24,13 +25,16 @@ typedef struct {
     short state;
     long tick_counter;
 } Plan;
-
+// --- main interface ---
 Plan* parse_plan(char*, Plan*);
 void update_retired_instructions(long instructions_retired, Plan *plan);
 void update_cur_task_process(Plan*);
+
+// --- helper functions ---
 Task* find_task_with_task_id(Plan* , long);
 void update_node_lateness(long , Plan* );
-
+void change_plan_state(Plan*, short);
+void show_tasks(Plan*);
 
 
 #endif //LEVEL2_PLAN_H

@@ -32,6 +32,6 @@ struct Task {
 };
 
 void update_retired_instructions_task(long instructions, Task* task);
-
+void change_task_state(Task*, short);
 
 

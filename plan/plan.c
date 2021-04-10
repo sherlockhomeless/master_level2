@@ -9,6 +9,7 @@
 
 void update_free_space_usage(long, Plan*);
 short does_task_turn_late(long instructions_to_run, Task *task);
+
 /**
  * Tracks the state changes of a task in terms of lateness
  * @param instructions_to_run Instructions run on the task
@@ -46,6 +47,7 @@ void update_retired_instructions(long instructions_retired, Plan* plan){
         plan->cur_task->instructions_retired_slot += instructions_retired;
     } else {
         slot_owner = find_task_with_task_id(plan, plan->cur_task->slot_owner);
+
         slot_owner->instructions_retired_slot += instructions_retired;
     }
 
@@ -60,7 +62,7 @@ void update_retired_instructions(long instructions_retired, Plan* plan){
  */
 void update_cur_task_process(Plan *p) {
     p->cur_task = p->tasks;
-    p->cur_task->state = TASK_RUNNING;
+    change_task_state(p->cur_task, TASK_RUNNING);
     p->cur_process = &p->processes[p->cur_task->process_id];
 }
 
@@ -94,4 +96,19 @@ void update_free_space_usage(long length_free_space, Plan* p){
 
 void update_node_lateness(long instructions, Plan* p){
     p->lateness += instructions;
+}
+void change_plan_state(Plan* p, short state){
+    p->state = state;
+    printf("[CHANGE_PLAN_STATE] changed state %d", p->state);
+}
+
+void show_tasks(Plan* p){
+    Task task_list[400];
+    for (int i = 0; i <= p->num_tasks; i++){
+        task_list[i] = *(p->tasks + i);
+    }
+    for (int i = 0; i<400; i++){
+        printf("%d:(%ld, %ld) ", i, task_list[i].task_id, task_list[i].process_id);
+    }
+    printf("!\n");
 }

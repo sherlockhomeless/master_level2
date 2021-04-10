@@ -8,17 +8,27 @@
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
 #include "config.h"
+#include "prediction_failure_handling.h"
 
 char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
+
 void read_plan(FILE*, char* , long);
 long get_file_size(FILE*);
 void test_plan_parsing(Plan*);
 void check_thresholds(Plan*);
 void check_running_first_task(Plan*);
+void test_task_moving();
+int test_run();
 Task * run(Plan *p, Task * t);
 
-int main(){
 
+int main(){
+    test_task_moving();
+    return test_run();
+
+}
+
+int test_run(){
     Task* cur_task;
     Plan* plan = (Plan*) malloc(sizeof(Plan));
     test_plan_parsing(plan);
@@ -31,11 +41,30 @@ int main(){
     cur_task = plan->cur_task;
     cur_task->instructions_real = cur_task->instructions_planned * SIGMA_T1 + 1;
     while(cur_task->state != TASK_PREEMPTED){
-       cur_task = run(plan, cur_task);
+        cur_task = run(plan, cur_task);
     }
     printf("[MAIN] Preemption worked");
-    //check preemption and moving
+
+    long task_order[] = {2,1,3,4};
+    plan->tasks->instructions_real = plan->tasks->instructions_planned;
+    plan->tasks[2].instructions_real =  plan->tasks[2].instructions_planned;
+    plan->tasks[3].instructions_real =  plan->tasks[3].instructions_planned;
+
+    printf("[MAIN] checking right order of execution for interrupted task");
+
+    // fix does not stop here
+    while (plan->cur_task->task_id == 2 || plan->cur_task->task_id == 1 || plan->cur_task->task_id == 3 || plan->cur_task->task_id == 4 ){
+        if (plan->tick_counter==188){
+            printf("del");
+        }
+        run(plan, cur_task);
+        show_tasks(plan);
+    }
     return 0;
+    if(plan->state == PLAN_FINISHED)
+        return 0;
+    else
+        return 1;
 }
 
 void check_running_first_task(Plan* plan){
@@ -92,11 +121,22 @@ void test_plan_parsing(Plan* plan){
 
     printf("plan (@ %p) should have 317 tasks, has %ld, last task id should be 288, is %ld \n", plan,
            plan->num_tasks, plan->tasks[plan->num_tasks-1].task_id);
+
+    // print whole parsed plan
+    Task* t_ptr = plan->tasks;
+    printf("[PLAN]");
+    while(t_ptr->task_id != -2){
+        printf("[%ld]-", t_ptr->task_id);
+        t_ptr++;
+    }
+    printf("[%ld]", t_ptr->task_id);
+    printf("\n");
+
 }
 
 /**
  * reads the file into the buffer
- * @param fp filedescriptor for plan-text-file
+ * @param fp file_descriptor for plan-text-file
  * @param buffer buffer that contain chars
  */
 void read_plan(FILE* fp, char* buffer, long length_buffer){
@@ -128,4 +168,15 @@ Task * run(Plan* p, Task * t){
     } else {
         return t;
     }
+}
+
+void test_task_moving(){
+    long first_task_id;
+    long second_task_id;
+    Plan* plan = (Plan*) malloc(sizeof(Plan));
+    test_plan_parsing(plan);
+
+    plan->tasks[0].slot_owner = plan->tasks[1].task_id;
+    plan->tasks[1].process_id = 0;
+    preempt_cur_task(plan);
 }
