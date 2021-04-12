@@ -4,8 +4,9 @@
 
 #include <stdio.h>
 #include "task.h"
+#include "config.h"
 
-void update_retired_instructions_task(long instructions, Task* task){
+void update_retired_instructions_task(long instructions, Task *task) {
     task->instructions_retired_task += instructions;
 
     // update lateness
@@ -19,8 +20,8 @@ void update_retired_instructions_task(long instructions, Task* task){
     }
 }
 
-void change_task_state(Task* t, short state){
-    short state_before;
+void change_task_state(Task *t, short state) {
+    short state_before = t->state;
     t->state = state;
     printf("[CHANGE_TASK_STATE] changed task %ld from %d to %d\n", t->task_id, state_before, state);
 }

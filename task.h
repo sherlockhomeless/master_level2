@@ -16,12 +16,10 @@
 
 #define SHARES_NO_SLOT 0
 
-// https://stackoverflow.com/questions/3988041/how-to-define-a-typedef-struct-containing-pointers-to-itself
-typedef struct Task Task;
 
-struct Task {
-    long process_id; // pid of process task belongs to
+typedef struct {
     long task_id;  // task identifier
+    long process_id; // pid of process task belongs to
     long instructions_planned; // instructions planned for task
     long instructions_real; // helper variable for simulating task deviations
     long instructions_retired_task; // instructions run on task
@@ -29,9 +27,9 @@ struct Task {
     long lateness; // lateness of task
     short state; // state of task, see defines for possible values
     long slot_owner; // ID of task in which current task runs; should be pointer for efficiency, but none trivial with task preemption and moving of tasks in memory
-};
+} Task;
 
-void update_retired_instructions_task(long instructions, Task* task);
-void change_task_state(Task*, short);
+void update_retired_instructions_task(long instructions, Task *task);
+void change_task_state(Task *t, short state);
 
 

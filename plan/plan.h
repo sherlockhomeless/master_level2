@@ -18,16 +18,19 @@ typedef struct {
     long num_tasks;
     PlanProcess processes[MAX_NUMBER_PROCESSES] ;
     Task* tasks;
+    Task* finished_tasks;
     PlanProcess* cur_process;
     Task* cur_task;
     long lateness;
     long instructions_retired;
     short state;
     long tick_counter;
+    long tasks_finished;
+    long stress;
 } Plan;
 // --- main interface ---
 Plan* parse_plan(char*, Plan*);
-void update_retired_instructions(long instructions_retired, Plan *plan);
+void update_retired_instructions(long instructions_retired, Plan *p);
 void update_cur_task_process(Plan*);
 
 // --- helper functions ---
@@ -36,5 +39,7 @@ void update_node_lateness(long , Plan* );
 void change_plan_state(Plan*, short);
 void show_tasks(Plan*);
 
+// --- for testing ---
 
+void generate_test_plan(Plan *p, PlanProcess* process_list, Task *task_list);
 #endif //LEVEL2_PLAN_H

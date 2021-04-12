@@ -11,8 +11,8 @@
 #define END 0b1111
 
 
-char* parse_meta(char* plan_s, char* cur_position, Plan* plan);
-void parse_tasks(char* plan_s, char* cur_position, Plan* plan);
+char* parse_meta(char* plan_s, char* cur_position, Plan* p);
+void parse_tasks(char* plan_s, char* cur_position, Plan* p);
 
 void parse_next_process(char** str, PlanProcess* process_information);
 char* parse_next_task(Plan* , int , char* );
@@ -26,19 +26,22 @@ Plan* parse_plan(char* plan_s, Plan* plan){
     cur_position = parse_meta(plan_s, cur_position, plan);
     parse_tasks(plan_s, cur_position, plan);
     change_plan_state(plan, ON_PLAN);
+    plan->tasks_finished = 0;
     plan->cur_task = plan->tasks;
+    plan->finished_tasks = plan->tasks;
     plan->cur_process = &plan->processes[plan->cur_task->process_id];
+    plan->tick_counter = 0;
     return plan;
 }
 
 
 /*
- * @brief parses the meta information contained in the plan
- * @param plan_s: String of the plan to be parsed
+ * @brief parses the meta information contained in the p
+ * @param plan_s: String of the p to be parsed
  * @param cur_position: Pointer to the current position in the parsing process
- * @param plan: Target data structure to insert data into
+ * @param p: Target data structure to insert data into
  */
-char* parse_meta(char* plan_s, char* cur_position, Plan* plan){
+char* parse_meta(char* plan_s, char* cur_position, Plan* p){
     /* FLAGS:
     0b0 => found nothing
     0b1 => found number of processes
@@ -57,53 +60,53 @@ char* parse_meta(char* plan_s, char* cur_position, Plan* plan){
         // parse number of processes
         if (cur_symbol == NUMBER && state == 0b0) {
             long number_processes = parse_next_number(&cur_position);
-            plan->num_processes = number_processes;
+            p->num_processes = number_processes;
             PlanProcess *ptr_process_information = (PlanProcess *) malloc(number_processes * sizeof(PlanProcess));
-            //plan->processes[0] = ptr_process_information;
+            //p->processes[0] = ptr_process_information;
 
-            plan->num_processes = number_processes;
+            p->num_processes = number_processes;
             state = 0b1;
             cur_position++;
 
             if (LOG)
-                printf("number of processes found: %ld\n", plan->num_processes);
+                printf("number of processes found: %ld\n", p->num_processes);
 
         } else if (cur_symbol == SEMI && parse_cur_symbol(cur_position + 1) == SEMI) {
             cur_position += 2;
             found_end = 1;
             continue;
         } else {
-            plan->processes[process_counter].num_tasks = 0;
-            plan->processes[process_counter].lateness = 0;
-            plan->processes[process_counter].length_plan = 0;
-            plan->processes[process_counter].instructions_retired = 0;
-            plan->processes[process_counter].process_id = 0;
-            plan->processes[process_counter].buffer = 0;
+            p->processes[process_counter].num_tasks = 0;
+            p->processes[process_counter].lateness = 0;
+            p->processes[process_counter].length_plan = 0;
+            p->processes[process_counter].instructions_retired = 0;
+            p->processes[process_counter].process_id = 0;
+            p->processes[process_counter].buffer = 0;
 
 
-            parse_next_process(&cur_position, &plan->processes[process_counter]);
+            parse_next_process(&cur_position, &p->processes[process_counter]);
 
             if(LOG)
-                printf("process %ld: buffer=%ld\n", plan->processes[process_counter].process_id, plan->processes[process_counter].buffer);
+                printf("process %ld: buffer=%ld\n", p->processes[process_counter].process_id, p->processes[process_counter].buffer);
             process_counter++;
         }
     }
     return cur_position;
 }
 
-void parse_tasks(char* plan_s, char* cur_position, Plan* plan) {
+void parse_tasks(char* plan_s, char* cur_position, Plan* p) {
     long length_all_tasks;
-    plan->num_tasks = count_tasks(cur_position);
-    length_all_tasks = plan->num_tasks + 1;
-    plan->tasks = (Task*) malloc((plan->num_tasks + 1) * sizeof (Task));
+    p->num_tasks = count_tasks(cur_position);
+    length_all_tasks = p->num_tasks + 1;
+    p->tasks = (Task*) malloc((p->num_tasks + 1) * sizeof (Task));
 
-    for (int i = 0; i < plan->num_tasks; i++){
-        cur_position = parse_next_task(plan, i, cur_position);
+    for (int i = 0; i < p->num_tasks; i++){
+        cur_position = parse_next_task(p, i, cur_position);
         if(LOG)
-            printf("task %ld: pid=%ld, length_plan=%ld @=%p\n ", plan->tasks[i].task_id, plan->tasks[i].process_id, plan->tasks[i].instructions_planned,  &plan->tasks[i]);
+            printf("task %ld: pid=%ld, length_plan=%ld @=%p\n ", p->tasks[i].task_id, p->tasks[i].process_id, p->tasks[i].instructions_planned, &p->tasks[i]);
     }
     Task* end_task;
-    end_task = &plan->tasks[plan->num_tasks];
+    end_task = &p->tasks[p->num_tasks];
     end_task->task_id = -2; // marks list tail
     end_task->process_id = -2; // marks list tail
 }

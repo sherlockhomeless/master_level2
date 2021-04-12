@@ -2,13 +2,14 @@
 // Created by ml on 26.03.21.
 //
 #include <stdio.h>
+#include <assert.h>
 
 #include "threshold_checking.h"
 #include "plan/plan.h"
 #include "config.h"
 
 long calculate_t1(Task*);
-long calculate_t2_task(Task*);
+long calculate_t2_task(Task *task, Plan *p);
 
 long calculate_t1(Task* task){
     long t1_relative, t1_minimum, t1_maximum, t1;
@@ -47,12 +48,12 @@ short check_t1(Plan* p) {
     }
 }
 
-long calculate_t2_task(Task* task){
+long calculate_t2_task(Task *task, Plan *p) {
     long t2_task, t2_task_min, t2_task_relative, t1;
     t1 = calculate_t1(task);
     t2_task_min = (long) (t1 + T2_SPACER);
     t2_task_relative = (long) (task->instructions_planned * CAP_LATENESS);
-    if(0)
+    if(LOG)
         printf("[t2_task] task %ld: instructions_planned=%ld, t2_task_min=%ld, t2_task_relative=%ld\n",
                task->task_id, task->instructions_planned, t2_task_min, t2_task_relative);
 
@@ -64,16 +65,20 @@ long calculate_t2_task(Task* task){
     return t2_task;
 
 }
-short check_t2_task(Task* task){
-    long t2_task = calculate_t2_task(task);
+short check_t2_task(Task *task, Plan *p) {
+    long t2_task = calculate_t2_task(task, p);
     // compare
     if (task->instructions_retired_slot >= t2_task)
         return T2;
     else
         return OK;
 }
+
 short check_tm2_task(Task* task){
-    long tm2_task = calculate_t2_task(task) * -2;
+    long plan_length = task->instructions_planned;
+    long tm2_task = (plan_length * CAP_LATENESS/10) / 100;
+    assert(tm2_task < plan_length);
+
     if (task->instructions_retired_slot < tm2_task && task->state == TASK_FINISHED)
         return TM2;
     else
@@ -103,13 +108,12 @@ long calculate_usable_buffer(int free_time, int assignable_buffer, long buffer, 
     long available_buffer;
     long usable_buffer;
     long process_progress;
-    long const accuracy = 10000; // No floating point in Kernel, therefore accuracy provides shifting of ratio for
 
     buffer_with_free_time_applied =  (buffer * free_time / 100) ;
     available_buffer = buffer_with_free_time_applied * assignable_buffer / 100;
-    process_progress = (length_process_finished * accuracy) / length_process_plan;
+    process_progress = (length_process_finished * ACCURACY) / length_process_plan;
 
-    usable_buffer = available_buffer * process_progress /accuracy;
+    usable_buffer = available_buffer * process_progress /ACCURACY;
 
     return usable_buffer;
 }

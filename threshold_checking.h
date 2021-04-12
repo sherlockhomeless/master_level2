@@ -14,7 +14,7 @@
 
 
 short check_t1(Plan*);
-short check_t2_task(Task*);
+short check_t2_task(Task *task, Plan *p);
 short check_tm2_task(Task*);
 
 short check_t2_process(PlanProcess *process, long usable_buffer);

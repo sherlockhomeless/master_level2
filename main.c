@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+
 #include "plan/plan.h"
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
@@ -16,14 +18,24 @@ void read_plan(FILE*, char* , long);
 long get_file_size(FILE*);
 void test_plan_parsing(Plan*);
 void check_thresholds(Plan*);
-void check_running_first_task(Plan*);
+void check_run_task_on_time(Plan *plan);
+void check_run_task_early_time(Plan *plan);
+void check_run_task_tm2_early_time(Plan *plan);
+void check_run_task_late_time(Plan *plan);
+void check_preempt_task(Plan *plan);
+void check_signal_t2_task(Plan *plan);
+
+void run_unit_tests();
+void test_find_slot_to_move_to();
+void test_move_others();
+void test_insert_preempted_tasks(); //todo: imp
 void test_task_moving();
 int test_run();
 Task * run(Plan *p, Task * t);
 
 
 int main(){
-    test_task_moving();
+    run_unit_tests();
     return test_run();
 
 }
@@ -33,41 +45,17 @@ int test_run(){
     Plan* plan = (Plan*) malloc(sizeof(Plan));
     test_plan_parsing(plan);
     check_thresholds(plan);
-
-    check_running_first_task(plan);
-
-    // set task 2 so it will be preempted
-    // fixme: After moving around in plan -> cur_task changes too
-    cur_task = plan->cur_task;
-    cur_task->instructions_real = cur_task->instructions_planned * SIGMA_T1 + 1;
-    while(cur_task->state != TASK_PREEMPTED){
-        cur_task = run(plan, cur_task);
-    }
-    printf("[MAIN] Preemption worked");
-
-    long task_order[] = {2,1,3,4};
-    plan->tasks->instructions_real = plan->tasks->instructions_planned;
-    plan->tasks[2].instructions_real =  plan->tasks[2].instructions_planned;
-    plan->tasks[3].instructions_real =  plan->tasks[3].instructions_planned;
-
-    printf("[MAIN] checking right order of execution for interrupted task");
-
-    // fix does not stop here
-    while (plan->cur_task->task_id == 2 || plan->cur_task->task_id == 1 || plan->cur_task->task_id == 3 || plan->cur_task->task_id == 4 ){
-        if (plan->tick_counter==188){
-            printf("del");
-        }
-        run(plan, cur_task);
-        show_tasks(plan);
-    }
+    check_run_task_on_time(plan); // finish t0
+    check_run_task_early_time(plan); // finish t1
+    check_run_task_tm2_early_time(plan); // finish t2
+    check_run_task_late_time(plan);
+    check_preempt_task(plan);
+    while(plan->state != PLAN_FINISHED)
+        schedule(plan);
     return 0;
-    if(plan->state == PLAN_FINISHED)
-        return 0;
-    else
-        return 1;
 }
-
-void check_running_first_task(Plan* plan){
+// t0
+void check_run_task_on_time(Plan* plan){
     long ins_per_tick = INS_PER_TICK;
     int ticks_to_finish_first_task;
     long lateness_after_1_task;
@@ -75,7 +63,7 @@ void check_running_first_task(Plan* plan){
     PlanProcess* first_process;
 
     first_task = plan->cur_task;
-    first_task->instructions_real = first_task->instructions_planned + 100;
+    first_task->instructions_real = first_task->instructions_planned;
     first_process = plan->cur_process;
 
     // finish first task
@@ -89,22 +77,90 @@ void check_running_first_task(Plan* plan){
     printf("node lateness should be %ld, is %ld\n", lateness_after_1_task, plan->lateness);
 
 }
+// t1
+void check_run_task_early_time(Plan * p) {
+    assert(p->tasks_finished == 1);
+    assert(p->tasks->task_id == 1);
+    assert(p->tasks == p->cur_task);
 
+    Task* t1_addr = p->cur_task;
+    long ticks_start = p->tick_counter;
+    long ticks_end;
+    long duration;
+    long ticks_to_finish = p->cur_task->instructions_real / INS_PER_TICK;
+    p->cur_task->instructions_real = p->cur_task->instructions_planned - 100;
+    while (p->cur_task == t1_addr){
+        schedule(p);
+    }
+    ticks_end = p->tick_counter;
+    duration = ticks_end - ticks_start;
+    assert(duration == ticks_to_finish + 1 || duration == ticks_to_finish);
+}
+// t2
+void check_run_task_tm2_early_time(Plan *p){
+    //todo: implement
+    Task* t_2 = p->cur_task;
+    assert(p->tasks_finished == 2);
+    p->cur_task->instructions_real = ((p->cur_task->instructions_planned * (CAP_LATENESS/10)/100) - 13430718);
+    assert(p->cur_task->instructions_real < p->cur_task->instructions_planned);
+    while (t_2->state != TASK_FINISHED){
+        assert(p->cur_task->task_id == 2);
+        schedule(p);
+    }
+    assert(p->state == SIGNALED);
+
+}
+//t3
+void check_run_task_late_time(Plan *p){
+    Task* t3 = p->cur_task;
+    assert(p->tasks_finished == 3);
+    p->cur_task->instructions_real = p->cur_task->instructions_planned + 100;
+
+    while (t3->state != TASK_FINISHED){
+        assert(p->cur_task->task_id == 3);
+        schedule(p);
+    }
+
+}
+
+//t4
+void check_preempt_task(Plan *p){
+    assert(p->tasks_finished == 4);
+    Task* old_addr_t4 = p->cur_task;
+    long old_slot_owner = old_addr_t4->slot_owner;
+    long new_slot_owner;
+    Task* new_addr_t4;
+    long t4_id = p->cur_task->task_id;
+    p->cur_task->instructions_real = p->cur_task->instructions_planned + PREEMPTION_LIMIT + 1;
+    while(p->cur_task->task_id == t4_id){
+        schedule(p);
+    }
+
+    new_addr_t4 = find_task_with_task_id(p, t4_id);
+    new_slot_owner = new_addr_t4->slot_owner;
+    assert(new_addr_t4 > old_addr_t4);
+    assert(old_slot_owner != new_slot_owner);
+}
+
+void check_signal_t2_task(Plan *p){
+    //todo: implement
+
+}
 /**
  * Check if Threshold calculation works
- * @param plan
+ * @param p
  */
-void check_thresholds(Plan* plan){
+void check_thresholds(Plan* p){
     short result;
-    result = check_t1(plan);
-    result = check_t2_task(plan->cur_task);
-    result = check_tm2_task(plan->cur_task);
+    result = check_t1(p);
+    result = check_t2_task(p->cur_task, p);
+    result = check_tm2_task(p->cur_task);
 
-    result = check_t2_process(plan->cur_process, 0);
-    result = check_tm2_process(plan->cur_process);
+    result = check_t2_process(p->cur_process, 0);
+    result = check_tm2_process(p->cur_process);
 
-    result = check_t2_node(plan);
-    result = check_tm2_node(plan);
+    result = check_t2_node(p);
+    result = check_tm2_node(p);
 }
 /**
  * Tests if parsing of Plan works
@@ -131,7 +187,6 @@ void test_plan_parsing(Plan* plan){
     }
     printf("[%ld]", t_ptr->task_id);
     printf("\n");
-
 }
 
 /**
@@ -170,6 +225,13 @@ Task * run(Plan* p, Task * t){
     }
 }
 
+void run_unit_tests(){
+    test_find_slot_to_move_to();
+    test_move_others();
+    test_task_moving();
+    test_insert_preempted_tasks();
+}
+
 void test_task_moving(){
     long first_task_id;
     long second_task_id;
@@ -179,4 +241,71 @@ void test_task_moving(){
     plan->tasks[0].slot_owner = plan->tasks[1].task_id;
     plan->tasks[1].process_id = 0;
     preempt_cur_task(plan);
+}
+
+void test_find_slot_to_move_to(){
+    Plan p;
+    Task* tasks = (Task*) malloc(sizeof (Task) * 5);
+    PlanProcess processes [MAX_NUMBER_PROCESSES];
+
+    long order[5] = {0,1,2,3,0};
+    p.tasks = tasks;
+    long index;
+
+    for (int i = 0; i < 5; i++){
+        tasks[i].process_id = order[i];
+    }
+
+    generate_test_plan(&p, processes, tasks);
+
+    index = find_slot_to_move_to(0, &p );
+    assert(index == 3);
+}
+
+void test_move_others(){
+    Plan p;
+    Task* tasks = (Task*) malloc(sizeof (Task) * 5);
+    PlanProcess processes [MAX_NUMBER_PROCESSES];
+    long order[5] = {0,1,2,3,4};
+    for(int i = 0; i < 5; i++){
+        tasks[i].process_id = order [i];
+        tasks[i].task_id = order[i];
+        tasks[i].slot_owner = SHARES_NO_SLOT;
+    }
+    generate_test_plan(&p, processes, tasks);
+
+    move_other_tasks_forward(4, 1, &p);
+    assert(tasks[0].task_id == 1);
+    assert(tasks[3].task_id == 4);
+
+
+    for (int i = 0; i < 5; i++){
+        tasks[i].task_id = order[i];
+    }
+
+    move_other_tasks_forward(5, 2, &p);
+    assert(tasks[0].task_id == 2);
+    assert(tasks[1].task_id == 3);
+}
+
+void test_insert_preempted_tasks() {
+    Plan p;
+    Task* tasks = (Task*) malloc(sizeof (Task) * 5);
+    PlanProcess processes [MAX_NUMBER_PROCESSES];
+
+    long order[5] = {0,1,2,3,4};
+    for(int i = 0; i < 5; i++){
+        tasks[i].process_id = order [i];
+        tasks[i].task_id = order[i];
+    }
+
+
+    generate_test_plan(&p, processes, tasks);
+    // 0-1-2-3-4 > 0-1-2-0-4
+    move_preempted_tasks(3,1,tasks, &p);
+
+    assert(tasks[3].task_id == 0);
+    assert(tasks[3].slot_owner == 4);
+    assert(tasks[4].task_id == 4);
+    assert(tasks[2].task_id == 2);
 }
