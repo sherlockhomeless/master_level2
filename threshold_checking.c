@@ -4,14 +4,15 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "threshold_checking.h"
+#include "pbs_entities.h"
 #include "plan/plan.h"
-#include "config.h"
+#include "threshold_checking.h"
+#include "prediction_failure_config.h"
 
-long calculate_t1(Task*);
-long calculate_t2_task(Task *task, Plan *p);
+long calculate_t1(struct PBS_Task*);
+long calculate_t2_task(struct PBS_Task *task, struct PBS_Plan *p);
 
-long calculate_t1(Task* task){
+long calculate_t1(struct PBS_Task* task){
     long t1_relative, t1_minimum, t1_maximum, t1;
     t1_minimum = task->instructions_planned + NO_PREEMPTION;
     // todo: problematic conversion
@@ -30,9 +31,9 @@ long calculate_t1(Task* task){
     return t1;
 }
 
-short check_t1(Plan* p) {
+short check_t1(struct PBS_Plan* p) {
 
-    Task* task_to_check;
+    struct PBS_Task* task_to_check;
     //task was moved and is not in original slot anymore
     if (p->cur_task->slot_owner == SHARES_NO_SLOT){
         //todo: stack check, is >1 one task in new slot
@@ -48,12 +49,12 @@ short check_t1(Plan* p) {
     }
 }
 
-long calculate_t2_task(Task *task, Plan *p) {
+long calculate_t2_task(struct PBS_Task *task,struct PBS_Plan *p) {
     long t2_task, t2_task_min, t2_task_relative, t1;
     t1 = calculate_t1(task);
     t2_task_min = (long) (t1 + T2_SPACER);
     t2_task_relative = (long) (task->instructions_planned * CAP_LATENESS);
-    if(LOG)
+    if(LOG_PBS)
         printf("[t2_task] task %ld: instructions_planned=%ld, t2_task_min=%ld, t2_task_relative=%ld\n",
                task->task_id, task->instructions_planned, t2_task_min, t2_task_relative);
 
@@ -65,7 +66,7 @@ long calculate_t2_task(Task *task, Plan *p) {
     return t2_task;
 
 }
-short check_t2_task(Task *task, Plan *p) {
+short check_t2_task(struct PBS_Task *task, struct PBS_Plan *p) {
     long t2_task = calculate_t2_task(task, p);
     // compare
     if (task->instructions_retired_slot >= t2_task)
@@ -74,22 +75,22 @@ short check_t2_task(Task *task, Plan *p) {
         return OK;
 }
 
-short check_tm2_task(Task* task){
+short check_tm2_task(struct PBS_Task* task){
     long plan_length = task->instructions_planned;
     long tm2_task = (plan_length * CAP_LATENESS/10) / 100;
     assert(tm2_task < plan_length);
 
-    if (task->instructions_retired_slot < tm2_task && task->state == TASK_FINISHED)
+    if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED)
         return TM2;
     else
         return OK;
 }
 
-short check_t2_process(PlanProcess *process, long usable_buffer) {
+short check_t2_process(struct PBS_Process *process, long usable_buffer) {
     // TODO: HIER WEITER
     return OK;
 }
-short check_tm2_process(PlanProcess * process) {
+short check_tm2_process(struct PBS_Process * process) {
 
     return OK;
 }
@@ -118,11 +119,11 @@ long calculate_usable_buffer(int free_time, int assignable_buffer, long buffer, 
     return usable_buffer;
 }
 
-short check_t2_node(Plan* plan){
+short check_t2_node(struct PBS_Plan* plan){
 
     return OK;
 }
-short check_tm2_node(Plan* plan){
+short check_tm2_node(struct PBS_Plan* plan){
 
     return OK;
 }

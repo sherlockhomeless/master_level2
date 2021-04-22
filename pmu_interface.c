@@ -3,7 +3,7 @@
 //
 
 #include "pmu_interface.h"
-#include "config.h"
+#include "prediction_failure_config.h"
 
 long get_retired_instructions(){
     return INS_PER_TICK;

@@ -12,17 +12,17 @@
 #define T2 0b10
 #define TM2 0b11
 
+// todo: make configurable => allow turning of and on of different aspects
+short check_t1(struct PBS_Plan*);
+short check_t2_task(struct PBS_Task *task, struct PBS_Plan *p);
+short check_tm2_task(struct PBS_Task *);
 
-short check_t1(Plan*);
-short check_t2_task(Task *task, Plan *p);
-short check_tm2_task(Task*);
-
-short check_t2_process(PlanProcess *process, long usable_buffer);
-short check_tm2_process(PlanProcess *);
+short check_t2_process(struct PBS_Process *process, long usable_buffer);
+short check_tm2_process(struct PBS_Process *);
 long calculate_usable_buffer(int, int, long, long, long);
 
-short check_t2_node(Plan*);
-short check_tm2_node(Plan*);
+short check_t2_node(struct PBS_Plan*);
+short check_tm2_node(struct PBS_Plan*);
 
 
 

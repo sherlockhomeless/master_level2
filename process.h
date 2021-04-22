@@ -7,15 +7,6 @@
 
 #endif //LEVEL2_PROCESS_H
 
-typedef struct {
-    long process_id;
-    long num_tasks;
-    long buffer;
-    long lateness;
-    long length_plan;
-    long instructions_retired;
-} PlanProcess;
-
-void update_retired_instructions_process(long instructions, PlanProcess* process);
-void update_lateness_process(long late_instructions, PlanProcess* process);
-short is_process_late(PlanProcess*);
+void update_retired_instructions_process(long instructions,struct PBS_Process*  process);
+void update_lateness_process(long late_instructions,struct PBS_Process* process);
+short is_process_late(struct PBS_Process*);

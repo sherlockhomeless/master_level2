@@ -1,7 +1,9 @@
 //
 // Created by ml on 23.03.21.
 //
-
+/**
+ * todo: nice_to_have_
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,21 +11,21 @@
 #include "plan/plan.h"
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
-#include "config.h"
 #include "prediction_failure_handling.h"
 
-char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
+const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
+const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
 
 void read_plan(FILE*, char* , long);
 long get_file_size(FILE*);
-void test_plan_parsing(Plan*);
-void check_thresholds(Plan*);
-void check_run_task_on_time(Plan *plan);
-void check_run_task_early_time(Plan *plan);
-void check_run_task_tm2_early_time(Plan *plan);
-void check_run_task_late_time(Plan *plan);
-void check_preempt_task(Plan *plan);
-void check_signal_t2_task(Plan *plan);
+void test_plan_parsing(struct PBS_Plan*);
+void check_thresholds(struct PBS_Plan*);
+void check_run_task_on_time(struct PBS_Plan *plan);
+void check_run_task_early_time(struct PBS_Plan *plan);
+void check_run_task_tm2_early_time(struct PBS_Plan *plan);
+void check_run_task_late_time(struct PBS_Plan *plan);
+void check_preempt_task(struct PBS_Plan *plan);
+void check_signal_t2_task(struct PBS_Plan *plan);
 
 void run_unit_tests();
 void test_find_slot_to_move_to();
@@ -31,7 +33,8 @@ void test_move_others();
 void test_insert_preempted_tasks(); //todo: imp
 void test_task_moving();
 int test_run();
-Task * run(Plan *p, Task * t);
+
+struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
 
 
 int main(){
@@ -40,9 +43,14 @@ int main(){
 
 }
 
+
+
+
+
 int test_run(){
-    Task* cur_task;
-    Plan* plan = (Plan*) malloc(sizeof(Plan));
+    PredictionFailureSignal*  sig;
+    struct PBS_Task* cur_task;
+    struct PBS_Plan* plan = (struct PBS_Plan*) malloc(sizeof(struct PBS_Plan));
     test_plan_parsing(plan);
     check_thresholds(plan);
     check_run_task_on_time(plan); // finish t0
@@ -50,17 +58,24 @@ int test_run(){
     check_run_task_tm2_early_time(plan); // finish t2
     check_run_task_late_time(plan);
     check_preempt_task(plan);
-    while(plan->state != PLAN_FINISHED)
+    while(plan->state != PLAN_FINISHED) {
         schedule(plan);
+    }
+
+    for (int i = 0; i < 3; i++){
+        sig = get_signal(i);
+        printf("signal: tick=%ld type=%d, task=%ld, process=%ld\n",
+               sig->tick, sig->type_signal, sig->cur_task_id, sig->cur_process_id);
+    }
     return 0;
 }
 // t0
-void check_run_task_on_time(Plan* plan){
+void check_run_task_on_time(struct PBS_Plan* plan){
     long ins_per_tick = INS_PER_TICK;
     int ticks_to_finish_first_task;
     long lateness_after_1_task;
-    Task* first_task;
-    PlanProcess* first_process;
+    struct PBS_Task* first_task;
+    struct PBS_Process* first_process;
 
     first_task = plan->cur_task;
     first_task->instructions_real = first_task->instructions_planned;
@@ -78,12 +93,12 @@ void check_run_task_on_time(Plan* plan){
 
 }
 // t1
-void check_run_task_early_time(Plan * p) {
+void check_run_task_early_time(struct PBS_Plan * p) {
     assert(p->tasks_finished == 1);
     assert(p->tasks->task_id == 1);
     assert(p->tasks == p->cur_task);
 
-    Task* t1_addr = p->cur_task;
+    struct PBS_Task* t1_addr = p->cur_task;
     long ticks_start = p->tick_counter;
     long ticks_end;
     long duration;
@@ -97,13 +112,13 @@ void check_run_task_early_time(Plan * p) {
     assert(duration == ticks_to_finish + 1 || duration == ticks_to_finish);
 }
 // t2
-void check_run_task_tm2_early_time(Plan *p){
+void check_run_task_tm2_early_time(struct PBS_Plan *p){
     //todo: implement
-    Task* t_2 = p->cur_task;
+    struct PBS_Task* t_2 = p->cur_task;
     assert(p->tasks_finished == 2);
     p->cur_task->instructions_real = ((p->cur_task->instructions_planned * (CAP_LATENESS/10)/100) - 13430718);
     assert(p->cur_task->instructions_real < p->cur_task->instructions_planned);
-    while (t_2->state != TASK_FINISHED){
+    while (t_2->state != PLAN_TASK_FINISHED){
         assert(p->cur_task->task_id == 2);
         schedule(p);
     }
@@ -111,12 +126,12 @@ void check_run_task_tm2_early_time(Plan *p){
 
 }
 //t3
-void check_run_task_late_time(Plan *p){
-    Task* t3 = p->cur_task;
+void check_run_task_late_time(struct PBS_Plan *p){
+    struct PBS_Task* t3 = p->cur_task;
     assert(p->tasks_finished == 3);
     p->cur_task->instructions_real = p->cur_task->instructions_planned + 100;
 
-    while (t3->state != TASK_FINISHED){
+    while (t3->state != PLAN_TASK_FINISHED){
         assert(p->cur_task->task_id == 3);
         schedule(p);
     }
@@ -124,12 +139,12 @@ void check_run_task_late_time(Plan *p){
 }
 
 //t4
-void check_preempt_task(Plan *p){
+void check_preempt_task(struct PBS_Plan *p){
     assert(p->tasks_finished == 4);
-    Task* old_addr_t4 = p->cur_task;
+    struct PBS_Task* old_addr_t4 = p->cur_task;
     long old_slot_owner = old_addr_t4->slot_owner;
     long new_slot_owner;
-    Task* new_addr_t4;
+    struct PBS_Task* new_addr_t4;
     long t4_id = p->cur_task->task_id;
     p->cur_task->instructions_real = p->cur_task->instructions_planned + PREEMPTION_LIMIT + 1;
     while(p->cur_task->task_id == t4_id){
@@ -142,7 +157,7 @@ void check_preempt_task(Plan *p){
     assert(old_slot_owner != new_slot_owner);
 }
 
-void check_signal_t2_task(Plan *p){
+void check_signal_t2_task(struct PBS_Plan *p){
     //todo: implement
 
 }
@@ -150,7 +165,7 @@ void check_signal_t2_task(Plan *p){
  * Check if Threshold calculation works
  * @param p
  */
-void check_thresholds(Plan* p){
+void check_thresholds(struct PBS_Plan* p){
     short result;
     result = check_t1(p);
     result = check_t2_task(p->cur_task, p);
@@ -166,7 +181,7 @@ void check_thresholds(Plan* p){
  * Tests if parsing of Plan works
  * @param plan
  */
-void test_plan_parsing(Plan* plan){
+void test_plan_parsing(struct PBS_Plan* plan){
     // --- read plan ---
     FILE *fp = fopen(PLAN_PATH, "r");
     long buffer_size = get_file_size(fp);
@@ -179,7 +194,7 @@ void test_plan_parsing(Plan* plan){
            plan->num_tasks, plan->tasks[plan->num_tasks-1].task_id);
 
     // print whole parsed plan
-    Task* t_ptr = plan->tasks;
+    struct PBS_Task* t_ptr = plan->tasks;
     printf("[PLAN]");
     while(t_ptr->task_id != -2){
         printf("[%ld]-", t_ptr->task_id);
@@ -215,7 +230,7 @@ long get_file_size(FILE* fp){
  * @param p
  * @param t
  */
-Task * run(Plan* p, Task * t){
+struct PBS_Task * run(struct PBS_Plan* p, struct PBS_Task* t){
     long cur_task_id = t->task_id;
     schedule(p);
     if (cur_task_id != p->cur_task->task_id){
@@ -235,7 +250,7 @@ void run_unit_tests(){
 void test_task_moving(){
     long first_task_id;
     long second_task_id;
-    Plan* plan = (Plan*) malloc(sizeof(Plan));
+    struct PBS_Plan* plan = (struct PBS_Plan*) malloc(sizeof(struct PBS_Plan));
     test_plan_parsing(plan);
 
     plan->tasks[0].slot_owner = plan->tasks[1].task_id;
@@ -244,19 +259,17 @@ void test_task_moving(){
 }
 
 void test_find_slot_to_move_to(){
-    Plan p;
-    Task* tasks = (Task*) malloc(sizeof (Task) * 5);
-    PlanProcess processes [MAX_NUMBER_PROCESSES];
+    struct PBS_Plan p;
+    struct PBS_Process processes [MAX_NUMBER_PROCESSES];
 
     long order[5] = {0,1,2,3,0};
-    p.tasks = tasks;
     long index;
 
     for (int i = 0; i < 5; i++){
-        tasks[i].process_id = order[i];
+        p.tasks[i].process_id = order[i];
     }
 
-    generate_test_plan(&p, processes, tasks);
+    generate_test_plan(&p, processes, &tasks[0]);
 
     index = find_slot_to_move_to(0, &p );
     assert(index == 3);
@@ -265,7 +278,7 @@ void test_find_slot_to_move_to(){
 void test_move_others(){
     Plan p;
     Task* tasks = (Task*) malloc(sizeof (Task) * 5);
-    PlanProcess processes [MAX_NUMBER_PROCESSES];
+    PBS_Process processes [MAX_NUMBER_PROCESSES];
     long order[5] = {0,1,2,3,4};
     for(int i = 0; i < 5; i++){
         tasks[i].process_id = order [i];
@@ -291,7 +304,7 @@ void test_move_others(){
 void test_insert_preempted_tasks() {
     Plan p;
     Task* tasks = (Task*) malloc(sizeof (Task) * 5);
-    PlanProcess processes [MAX_NUMBER_PROCESSES];
+    PBS_Process processes [MAX_NUMBER_PROCESSES];
 
     long order[5] = {0,1,2,3,4};
     for(int i = 0; i < 5; i++){

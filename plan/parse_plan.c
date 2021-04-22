@@ -1,7 +1,9 @@
-#include "plan.h"
-#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "plan.h"
+#include "../prediction_failure_config.h"
+#include "../pbs_entities.h"
+
 
 // defining symbols for parsing
 #define NUMBER 0b0
@@ -11,16 +13,16 @@
 #define END 0b1111
 
 
-char* parse_meta(char* plan_s, char* cur_position, Plan* p);
-void parse_tasks(char* plan_s, char* cur_position, Plan* p);
+char* parse_meta(char* plan_s, char* cur_position, struct PBS_Plan* p);
+void parse_tasks(char* plan_s, char* cur_position, struct PBS_Plan* p);
 
-void parse_next_process(char** str, PlanProcess* process_information);
-char* parse_next_task(Plan* , int , char* );
+void parse_next_process(char** str, struct PBS_Process* process_information);
+char* parse_next_task(struct PBS_Plan * , int , char* );
 char parse_cur_symbol(char *str);
 long parse_next_number(char** str_ptr);
 long count_tasks(char* task_list);
 
-Plan* parse_plan(char* plan_s, Plan* plan){
+struct PBS_Plan* parse_plan(char* plan_s, struct PBS_Plan* plan){
     char* cur_position = plan_s;
     // parse meta-section until we find ';;;'
     cur_position = parse_meta(plan_s, cur_position, plan);
@@ -41,7 +43,7 @@ Plan* parse_plan(char* plan_s, Plan* plan){
  * @param cur_position: Pointer to the current position in the parsing process
  * @param p: Target data structure to insert data into
  */
-char* parse_meta(char* plan_s, char* cur_position, Plan* p){
+char* parse_meta(char* plan_s, char* cur_position, struct PBS_Plan* p){
     /* FLAGS:
     0b0 => found nothing
     0b1 => found number of processes
@@ -61,14 +63,14 @@ char* parse_meta(char* plan_s, char* cur_position, Plan* p){
         if (cur_symbol == NUMBER && state == 0b0) {
             long number_processes = parse_next_number(&cur_position);
             p->num_processes = number_processes;
-            PlanProcess *ptr_process_information = (PlanProcess *) malloc(number_processes * sizeof(PlanProcess));
+            struct PBS_Process *ptr_process_information = (struct PBS_Process *) malloc(number_processes * sizeof( struct PBS_Process));
             //p->processes[0] = ptr_process_information;
 
             p->num_processes = number_processes;
             state = 0b1;
             cur_position++;
 
-            if (LOG)
+            if (LOG_PBS)
                 printf("number of processes found: %ld\n", p->num_processes);
 
         } else if (cur_symbol == SEMI && parse_cur_symbol(cur_position + 1) == SEMI) {
@@ -76,7 +78,7 @@ char* parse_meta(char* plan_s, char* cur_position, Plan* p){
             found_end = 1;
             continue;
         } else {
-            p->processes[process_counter].num_tasks = 0;
+            p->processes[process_counter].num_tasks_remaining = 0;
             p->processes[process_counter].lateness = 0;
             p->processes[process_counter].length_plan = 0;
             p->processes[process_counter].instructions_retired = 0;
@@ -86,29 +88,32 @@ char* parse_meta(char* plan_s, char* cur_position, Plan* p){
 
             parse_next_process(&cur_position, &p->processes[process_counter]);
 
-            if(LOG)
+            if(LOG_PBS)
                 printf("process %ld: buffer=%ld\n", p->processes[process_counter].process_id, p->processes[process_counter].buffer);
             process_counter++;
         }
     }
+    // setup process for unallocated time slots
+    p->processes[MAX_NUMBER_PROCESSES-1].process_id = -1;
+    p->processes[MAX_NUMBER_PROCESSES-1].buffer = -1;
+    p->processes[MAX_NUMBER_PROCESSES-1].length_plan = 0;
     return cur_position;
 }
 
-void parse_tasks(char* plan_s, char* cur_position, Plan* p) {
+void parse_tasks(char* plan_s, char* cur_position, struct PBS_Plan* p) {
     long length_all_tasks;
     p->num_tasks = count_tasks(cur_position);
     length_all_tasks = p->num_tasks + 1;
-    p->tasks = (Task*) malloc((p->num_tasks + 1) * sizeof (Task));
 
     for (int i = 0; i < p->num_tasks; i++){
         cur_position = parse_next_task(p, i, cur_position);
-        if(LOG)
+        if(LOG_PBS)
             printf("task %ld: pid=%ld, length_plan=%ld @=%p\n ", p->tasks[i].task_id, p->tasks[i].process_id, p->tasks[i].instructions_planned, &p->tasks[i]);
     }
-    Task* end_task;
-    end_task = &p->tasks[p->num_tasks];
-    end_task->task_id = -2; // marks list tail
-    end_task->process_id = -2; // marks list tail
+    struct PBS_Task end_task;
+    end_task.task_id = -2; // marks list tail
+    end_task.process_id = -2; // marks list tail
+    p->tasks[p->num_tasks + 1] = end_task;
 }
 
 /**
@@ -118,16 +123,16 @@ void parse_tasks(char* plan_s, char* cur_position, Plan* p) {
  * @param cur_position: Pointing to the first character in the tasks process
  * @return
  */
-char* parse_next_task(Plan* plan, int index, char* cur_position){
-    Task cur_t;
+char* parse_next_task(struct PBS_Plan* plan, int index, char* cur_position){
+    struct PBS_Task cur_t;
     cur_t.lateness = 0;
     cur_t.instructions_retired_slot = 0;
     cur_t.instructions_retired_task = 0;
-    cur_t.state = TASK_WAITING;
+    cur_t.state = PLAN_TASK_WAITING;
     cur_t.slot_owner = SHARES_NO_SLOT;
 
     cur_t.process_id = parse_next_number(&cur_position);
-    plan->processes[cur_t.process_id].num_tasks++;
+    plan->processes[cur_t.process_id].num_tasks_remaining++;
     cur_position++;
     cur_t.task_id = parse_next_number(&cur_position);
     cur_position++;
@@ -168,7 +173,7 @@ char parse_cur_symbol(char* str){
 }
 
 // ! pointer at first char after last number
-void parse_next_process(char** str, PlanProcess* process_information){
+void parse_next_process(char** str,struct PBS_Process* process_information){
     process_information->process_id = parse_next_number(str);
       *str+=1;
     process_information->buffer = parse_next_number(str);
