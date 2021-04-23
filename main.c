@@ -50,16 +50,18 @@ int main(){
 int test_run(){
     PredictionFailureSignal*  sig;
     struct PBS_Task* cur_task;
-    struct PBS_Plan* plan = (struct PBS_Plan*) malloc(sizeof(struct PBS_Plan));
-    test_plan_parsing(plan);
-    check_thresholds(plan);
-    check_run_task_on_time(plan); // finish t0
-    check_run_task_early_time(plan); // finish t1
-    check_run_task_tm2_early_time(plan); // finish t2
-    check_run_task_late_time(plan);
-    check_preempt_task(plan);
-    while(plan->state != PLAN_FINISHED) {
-        schedule(plan);
+    struct PBS_Plan plan = {0};
+    struct PBS_Plan* plan_ptr = &plan;
+    fill_empty_test_plan(plan_ptr);
+    test_plan_parsing(plan_ptr);
+    check_thresholds(plan_ptr);
+    check_run_task_on_time(plan_ptr); // finish t0
+    check_run_task_early_time(plan_ptr); // finish t1
+    check_run_task_tm2_early_time(plan_ptr); // finish t2
+    check_run_task_late_time(plan_ptr);
+    check_preempt_task(plan_ptr);
+    while(plan_ptr->state != PLAN_FINISHED) {
+        schedule(plan_ptr);
     }
 
     for (int i = 0; i < 3; i++){
@@ -88,15 +90,11 @@ void check_run_task_on_time(struct PBS_Plan* plan){
     }
     lateness_after_1_task = first_task->instructions_real - first_task->instructions_planned;
 
-    printf("process lateness should be %ld, is %ld\n", lateness_after_1_task, first_process->lateness);
-    printf("node lateness should be %ld, is %ld\n", lateness_after_1_task, plan->lateness);
-
+    assert(plan->tasks_finished == 1);
+    assert(plan->cur_task->task_id == 1);
 }
 // t1
 void check_run_task_early_time(struct PBS_Plan * p) {
-    assert(p->tasks_finished == 1);
-    assert(p->tasks->task_id == 1);
-    assert(p->tasks == p->cur_task);
 
     struct PBS_Task* t1_addr = p->cur_task;
     long ticks_start = p->tick_counter;
@@ -259,7 +257,8 @@ void test_task_moving(){
 }
 
 void test_find_slot_to_move_to(){
-    struct PBS_Plan p;
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
     struct PBS_Process processes [MAX_NUMBER_PROCESSES];
 
     long order[5] = {0,1,2,3,0};
@@ -269,23 +268,20 @@ void test_find_slot_to_move_to(){
         p.tasks[i].process_id = order[i];
     }
 
-    generate_test_plan(&p, processes, &tasks[0]);
-
     index = find_slot_to_move_to(0, &p );
     assert(index == 3);
 }
 
 void test_move_others(){
-    Plan p;
-    Task* tasks = (Task*) malloc(sizeof (Task) * 5);
-    PBS_Process processes [MAX_NUMBER_PROCESSES];
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
+    struct PBS_Task* tasks = &p.tasks[0];
     long order[5] = {0,1,2,3,4};
     for(int i = 0; i < 5; i++){
         tasks[i].process_id = order [i];
         tasks[i].task_id = order[i];
         tasks[i].slot_owner = SHARES_NO_SLOT;
     }
-    generate_test_plan(&p, processes, tasks);
 
     move_other_tasks_forward(4, 1, &p);
     assert(tasks[0].task_id == 1);
@@ -302,9 +298,9 @@ void test_move_others(){
 }
 
 void test_insert_preempted_tasks() {
-    Plan p;
-    Task* tasks = (Task*) malloc(sizeof (Task) * 5);
-    PBS_Process processes [MAX_NUMBER_PROCESSES];
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
+    struct PBS_Task* tasks = &p.tasks[0];
 
     long order[5] = {0,1,2,3,4};
     for(int i = 0; i < 5; i++){
@@ -312,8 +308,6 @@ void test_insert_preempted_tasks() {
         tasks[i].task_id = order[i];
     }
 
-
-    generate_test_plan(&p, processes, tasks);
     // 0-1-2-3-4 > 0-1-2-0-4
     move_preempted_tasks(3,1,tasks, &p);
 

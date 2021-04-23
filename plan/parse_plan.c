@@ -28,6 +28,7 @@ struct PBS_Plan* parse_plan(char* plan_s, struct PBS_Plan* plan){
     cur_position = parse_meta(plan_s, cur_position, plan);
     parse_tasks(plan_s, cur_position, plan);
     change_plan_state(plan, ON_PLAN);
+    plan->index_cur_task = 0;
     plan->tasks_finished = 0;
     plan->cur_task = plan->tasks;
     plan->finished_tasks = plan->tasks;
@@ -101,19 +102,19 @@ char* parse_meta(char* plan_s, char* cur_position, struct PBS_Plan* p){
 }
 
 void parse_tasks(char* plan_s, char* cur_position, struct PBS_Plan* p) {
+    int i;
     long length_all_tasks;
     p->num_tasks = count_tasks(cur_position);
     length_all_tasks = p->num_tasks + 1;
 
-    for (int i = 0; i < p->num_tasks; i++){
+    for ( i = 0; i < p->num_tasks; i++){
         cur_position = parse_next_task(p, i, cur_position);
         if(LOG_PBS)
             printf("task %ld: pid=%ld, length_plan=%ld @=%p\n ", p->tasks[i].task_id, p->tasks[i].process_id, p->tasks[i].instructions_planned, &p->tasks[i]);
     }
-    struct PBS_Task end_task;
-    end_task.task_id = -2; // marks list tail
-    end_task.process_id = -2; // marks list tail
-    p->tasks[p->num_tasks + 1] = end_task;
+    // signals end of plan
+    p->tasks[i].task_id = -2;
+    p->tasks[i].process_id = -2;
 }
 
 /**

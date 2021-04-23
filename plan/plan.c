@@ -5,7 +5,7 @@
 #include "assert.h"
 #include "../task.h"
 #include "../process.h"
-
+#include "../prediction_failure_config.h"
 // --- Task States ---
 #define ON_TIME 0
 #define TURNS_LATE 1
@@ -67,7 +67,6 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
  */
 void update_cur_task_process(struct PBS_Plan *p) {
     struct PBS_Task old_cur_task = *p->cur_task;
-    p->cur_task = p->tasks;
     change_task_state(p->cur_task, PLAN_TASK_RUNNING);
     if (p->cur_task->task_id != -1)
         p->cur_process = &p->processes[p->cur_task->process_id];
@@ -128,24 +127,6 @@ void show_tasks(struct PBS_Plan* p){
     printf("!\n");
 }
 
-void generate_test_plan(struct PBS_Plan *p, struct PBS_Process* process_list, struct PBS_Task *task_list) {
-
-    int i = 0;
-    while(task_list->task_id != -2){
-        p->tasks[i] = *task_list;
-        task_list++;
-        i++;
-    }
-    p->cur_task = &p->tasks[0];
-    p->lateness= 0;
-    p->state=ON_PLAN;
-    p->stress= 0;
-
-    for( i = 0; i < MAX_NUMBER_PROCESSES; i++){
-        p->processes[i] = process_list[i];
-    }
-}
-
 void write_binary_to_file(struct PBS_Plan* plan, char* binary_path){
     FILE *fp;
     fp = fopen(binary_path, "w");
@@ -157,4 +138,10 @@ void write_binary_to_file(struct PBS_Plan* plan, char* binary_path){
 
     //https://www.tutorialspoint.com/c_standard_library/c_function_fwrite.htm
     fwrite(plan, sizeof(struct PBS_Plan),1, fp);
+}
+
+void fill_empty_test_plan(struct PBS_Plan* p){
+    p->cur_task = &p->tasks[0];
+    p->finished_tasks = &p->tasks[0];
+    p->cur_process = &p->processes[p->cur_task->process_id];
 }

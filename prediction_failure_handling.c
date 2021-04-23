@@ -55,7 +55,7 @@ void signal_tm2(struct PBS_Plan* p){
 }
 /**
  * Implements a task preemption for the current task, does the following actions:
- * - checks if more then one PBS_Taskis assigned to the current slot
+ * - checks if more then one PBS_Task is assigned to the current slot
  * - looks for the next slot fitting the preempted task
  * - moves preempted task and associated tasks in the task list backwards, moves other tasks forward
  * - changes states to reflect task preemption
@@ -146,8 +146,8 @@ void move_preempted_tasks(long insertion_slot, int stack_size, struct PBS_Task* 
     }
 
     cur_slot = insertion_slot-stack_size+1;
-    Task* cur_task = &p->tasks[cur_slot];
-    PBS_Tasktask_before = *cur_task;
+    struct PBS_Task* cur_task = &p->tasks[cur_slot];
+    struct PBS_Task task_before = *cur_task;
 
     for (int i = 0; i < stack_size; i++){
         *(cur_task + i) = preempted_tasks[i];
@@ -163,10 +163,10 @@ void move_preempted_tasks(long insertion_slot, int stack_size, struct PBS_Task* 
  * @param tasks_to_move adresses of tasks that have to be moved
  * @returns the number of tasks that have to be moved
  */
-int get_stack_size_preempted_tasks(Task *tasks_to_move, Plan* p){
+int get_stack_size_preempted_tasks(struct PBS_Task *tasks_to_move, struct PBS_Plan* p){
     int index = 0;
     short add_next = 1;
-    Task* task_to_check = p->cur_task;
+    struct PBS_Task* task_to_check = p->cur_task;
 
     //
     while(task_to_check->slot_owner != SHARES_NO_SLOT && task_to_check->process_id == p->cur_task->process_id){
@@ -179,7 +179,7 @@ int get_stack_size_preempted_tasks(Task *tasks_to_move, Plan* p){
     tasks_to_move[index] = *task_to_check;
 
     for(int i = 0; i<index; i++){
-        tasks_to_move[i].state = TASK_PREEMPTED;
+        tasks_to_move[i].state = PLAN_TASK_PREEMPTED;
     }
 
     return index + 1;
@@ -191,7 +191,7 @@ int get_stack_size_preempted_tasks(Task *tasks_to_move, Plan* p){
  * @param stack_size
  * @param p
  */
-void move_other_tasks_forward(long insertion_slot, long stack_size, Plan *p) {
+void move_other_tasks_forward(long insertion_slot, long stack_size, struct PBS_Plan *p) {
     // move other tasks forwards
     for (int i = 0; i < insertion_slot; i++) {
         p->tasks[i] = p->tasks[i + stack_size];
@@ -201,7 +201,7 @@ void move_other_tasks_forward(long insertion_slot, long stack_size, Plan *p) {
  * Simulates a rescheduling from the scheduling component
  * @param p
  */
-void reschedule(Plan* p, short signal){
+void reschedule(struct PBS_Plan* p, short signal){
     // find out for what tasks rescheduling has to occur
     long instructions_rescheduling = RESCHEDULE_TIME * INS_PER_TICK;
     long new_length;
@@ -209,7 +209,7 @@ void reschedule(Plan* p, short signal){
     long task_counter = 0;
     long target_pid = p->cur_process->process_id;
 
-    PBS_Task* cur_task = p->cur_task;
+    struct PBS_Task* cur_task = p->cur_task;
     while (instructions_rescheduling > 0){
          instructions_rescheduling -= cur_task->instructions_real;
          cur_task++;
@@ -233,8 +233,8 @@ void reschedule(Plan* p, short signal){
     }
 
 // --- debug ---
-void get_all_ids_from_plan(long list_ids[400], Plan* p){
-    PBS_Task*cur_task = p->tasks;
+void get_all_ids_from_plan(long list_ids[400], struct PBS_Plan* p){
+    struct PBS_Task* cur_task = p->tasks;
     int counter = 0;
     while (cur_task->task_id != -2){
         list_ids[counter] = cur_task->task_id;
@@ -266,9 +266,9 @@ short same_ids(long first[400], long second[400]){
     return 1;
 }
 // checks if the task-ids for each process are increasing
-short order_is_kept(Plan* p){
+short order_is_kept(struct PBS_Plan* p){
     long last_id[MAX_NUMBER_PROCESSES] = {0};
-    Task* cur_task = p->tasks;
+    struct PBS_Task* cur_task = p->tasks;
     for (;cur_task->task_id != -2; cur_task++){
         if(cur_task->task_id == -1)
             continue;

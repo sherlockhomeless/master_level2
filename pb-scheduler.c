@@ -8,6 +8,7 @@
 #include "pb-scheduler.h"
 #include "pmu_interface.h"
 #include "plan/plan.h"
+#include "process.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
 #include "prediction_failure_config.h"
@@ -40,6 +41,8 @@ void schedule(struct PBS_Plan *p) {
         schedule_timer_tick(p);
     }
     p->tick_counter++;
+
+
 }
 /**
  * Updates ALL data structures to the state including the current tick
@@ -119,15 +122,17 @@ void schedule_timer_tick(struct PBS_Plan *p){
 
 
 /**
- * Implements a switching of tasks
+ * Implements a switching of tasks, changes the current Task for the Task in the next slot
  * @param p
  */
 void switch_task(struct PBS_Plan* p){
     struct PBS_Task* old_task = p->cur_task;
+    assert(p->cur_task->state == PLAN_TASK_FINISHED);
     p->tasks_finished++;
-    p->tasks++;
+    p->index_cur_task++;
+    p->cur_task++;
     update_cur_task_process(p);
-    if (p->tasks->task_id == -1){
+    if (p->cur_task->task_id == -1){
         handle_free_slot(p);
     }
     if(LOG_PBS)
@@ -140,14 +145,15 @@ void switch_task(struct PBS_Plan* p){
  * - Updates Lateness
  * @param p
  */
-void handle_free_slot(Plan* p){
+void handle_free_slot(struct PBS_Plan* p){
 
     assert(p->cur_task->task_id == -1);
     assert(p->cur_process->process_id == -1);
     printf("[HANDLE_FREE_SLOT]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
     long lateness_node_before = p->lateness;
-    Task* free_slot = p->tasks;
-    p->tasks++;
+    struct PBS_Task* free_slot = p->tasks;
+    p->index_cur_task++;
+    p->cur_task++;
     update_cur_task_process(p);
     update_retired_instructions(- free_slot->instructions_planned, p);
     long lateness_node_after = p->lateness;

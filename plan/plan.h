@@ -24,6 +24,5 @@ void change_plan_state(struct PBS_Plan*, short);
 void show_tasks(struct PBS_Plan*);
 
 // --- for testing ---
-
-void generate_test_plan(struct PBS_Plan *p, struct PBS_Process* process_list, struct PBS_Task* task_list);
+void fill_empty_test_plan(struct PBS_Plan* p);
 #endif //LEVEL2_PLAN_H
