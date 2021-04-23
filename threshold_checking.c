@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "kernel_dummies.h"
+
 #include "pbs_entities.h"
 #include "plan/plan.h"
 #include "threshold_checking.h"
@@ -55,7 +57,7 @@ long calculate_t2_task(struct PBS_Task *task,struct PBS_Plan *p) {
     t2_task_min = (long) (t1 + T2_SPACER);
     t2_task_relative = (long) (task->instructions_planned * CAP_LATENESS);
     if(LOG_PBS)
-        printf("[t2_task] task %ld: instructions_planned=%ld, t2_task_min=%ld, t2_task_relative=%ld\n",
+        printf(KERN_INFO "[PBS_calculate_t2_task] task %ld: instructions_planned=%ld, t2_task_min=%ld, t2_task_relative=%ld\n",
                task->task_id, task->instructions_planned, t2_task_min, t2_task_relative);
 
     if (t2_task_min > t2_task_relative)

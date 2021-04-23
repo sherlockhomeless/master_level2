@@ -1,6 +1,7 @@
 //
 // Created by ml on 25.03.21.
 //
+#include "kernel_dummies.h"
 
 #include <stdio.h>
 #include "pbs_entities.h"
@@ -24,6 +25,5 @@ void update_retired_instructions_task(long instructions, struct PBS_Task*task) {
 void change_task_state(struct PBS_Task *t, short state) {
     short state_before = t->state;
     t->state = state;
-    printf("[CHANGE_TASK_STATE] changed task %ld from %d to %d\n", t->task_id, state_before, state);
+    printf(KERN_INFO "[change_task_state] changed task %ld from %d to %d\n", t->task_id, state_before, state);
 }
-

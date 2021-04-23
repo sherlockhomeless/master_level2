@@ -71,9 +71,6 @@ char* parse_meta(char* plan_s, char* cur_position, struct PBS_Plan* p){
             state = 0b1;
             cur_position++;
 
-            if (LOG_PBS)
-                printf("number of processes found: %ld\n", p->num_processes);
-
         } else if (cur_symbol == SEMI && parse_cur_symbol(cur_position + 1) == SEMI) {
             cur_position += 2;
             found_end = 1;
@@ -88,9 +85,6 @@ char* parse_meta(char* plan_s, char* cur_position, struct PBS_Plan* p){
 
 
             parse_next_process(&cur_position, &p->processes[process_counter]);
-
-            if(LOG_PBS)
-                printf("process %ld: buffer=%ld\n", p->processes[process_counter].process_id, p->processes[process_counter].buffer);
             process_counter++;
         }
     }
@@ -109,7 +103,7 @@ void parse_tasks(char* plan_s, char* cur_position, struct PBS_Plan* p) {
 
     for ( i = 0; i < p->num_tasks; i++){
         cur_position = parse_next_task(p, i, cur_position);
-        if(LOG_PBS)
+        if(LOG_PBS && 0)
             printf("task %ld: pid=%ld, length_plan=%ld @=%p\n ", p->tasks[i].task_id, p->tasks[i].process_id, p->tasks[i].instructions_planned, &p->tasks[i]);
     }
     // signals end of plan

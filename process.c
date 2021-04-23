@@ -1,6 +1,8 @@
 //
 // Created by ml on 25.03.21.
 //
+#include "kernel_dummies.h"
+
 #include "pbs_entities.h"
 #include "process.h"
 

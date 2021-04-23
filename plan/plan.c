@@ -1,5 +1,6 @@
-
 #include <stdio.h>
+
+#include "../kernel_dummies.h"
 #include "../pbs_entities.h"
 #include "plan.h"
 #include "assert.h"
@@ -72,7 +73,7 @@ void update_cur_task_process(struct PBS_Plan *p) {
         p->cur_process = &p->processes[p->cur_task->process_id];
     else
         p->cur_process = &p->processes[MAX_NUMBER_PROCESSES -1];
-    printf("[UPDATE_CUR_TASK]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
+    printf(KERN_INFO "[PBS_update_cur_task_process]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
            p->cur_task->task_id, p->cur_task->process_id);
 }
 
@@ -83,8 +84,6 @@ void update_cur_task_process(struct PBS_Plan *p) {
  * @return
  */
 struct PBS_Task* find_task_with_task_id(struct PBS_Plan* p, long task_id){
-    if (p->tick_counter == 188)
-        show_tasks(p);
     struct PBS_Task* cur_task = p->cur_task;
     while (cur_task->task_id != -2){
         if (cur_task->task_id == task_id){
@@ -103,7 +102,7 @@ struct PBS_Task* find_task_with_task_id(struct PBS_Plan* p, long task_id){
 void update_free_space_usage(long length_free_space, struct PBS_Plan* p){
     p->lateness += length_free_space;
     if(LOG_PBS){
-        printf("[UPDATE_FREE_SPACE_USAGE]%ld, Node-lateness changed from %ld to %ld",p->tick_counter, p->lateness + length_free_space, p->lateness );
+        printf(KERN_INFO "[PBS_update_free_space_usage]%ld, Node-lateness changed from %ld to %ld",p->tick_counter, p->lateness + length_free_space, p->lateness );
     }
 }
 
@@ -112,7 +111,7 @@ void update_node_lateness(long instructions, struct PBS_Plan* p){
 }
 void change_plan_state(struct PBS_Plan* p, short state){
     p->state = state;
-    printf("[CHANGE_PLAN_STATE]%ld: changed state %d\n", p->tick_counter, p->state);
+    printf(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
 }
 
 void show_tasks(struct PBS_Plan* p){

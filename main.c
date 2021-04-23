@@ -4,6 +4,9 @@
 /**
  * todo: nice_to_have_
  */
+
+
+ // todo: more assertsbuffer=buffer=
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -43,10 +46,6 @@ int main(){
 
 }
 
-
-
-
-
 int test_run(){
     PredictionFailureSignal*  sig;
     struct PBS_Task* cur_task;
@@ -66,6 +65,7 @@ int test_run(){
 
     for (int i = 0; i < 3; i++){
         sig = get_signal(i);
+        //FIXME: Signals are trash
         printf("signal: tick=%ld type=%d, task=%ld, process=%ld\n",
                sig->tick, sig->type_signal, sig->cur_task_id, sig->cur_process_id);
     }
@@ -188,18 +188,8 @@ void test_plan_parsing(struct PBS_Plan* plan){
     // --- parse plan ---
     parse_plan(plan_string, plan);
 
-    printf("plan (@ %p) should have 317 tasks, has %ld, last task id should be 288, is %ld \n", plan,
-           plan->num_tasks, plan->tasks[plan->num_tasks-1].task_id);
-
     // print whole parsed plan
     struct PBS_Task* t_ptr = plan->tasks;
-    printf("[PLAN]");
-    while(t_ptr->task_id != -2){
-        printf("[%ld]-", t_ptr->task_id);
-        t_ptr++;
-    }
-    printf("[%ld]", t_ptr->task_id);
-    printf("\n");
 }
 
 /**

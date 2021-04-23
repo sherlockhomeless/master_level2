@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "kernel_dummies.h"
 #include "pb-scheduler.h"
 #include "pmu_interface.h"
 #include "plan/plan.h"
@@ -24,10 +25,10 @@ void handle_free_slot(struct PBS_Plan*);
  * @param p
  */
 void schedule(struct PBS_Plan *p) {
-    printf("NUM_TASSKS: %ld", p->num_tasks);
+    printf(KERN_INFO "NUM_TASSKS: %ld", p->num_tasks);
     assert(p->num_tasks < 400);
     if (p->cur_task->task_id == -2){
-        printf("[SCHEDULE]%ld finished running p ticks", p->tick_counter);
+        printf(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);
         change_plan_state(p, PLAN_FINISHED);
         return;
     }
@@ -51,8 +52,8 @@ void schedule(struct PBS_Plan *p) {
  */
 void update(long retired_instructions, struct PBS_Plan* p){
     update_retired_instructions(retired_instructions, p);
-    if(PBS_HZ)
-        printf("[CUR_TASK]%ld: (%ld,%ld): instructions_retired_slot: %ld \n", p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
+    if(LOG_PBS)
+        printf(KERN_INFO "[PBS_update]%ld: (%ld,%ld): instructions_retired_slot: %ld \n", p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
 }
 /**
  * Is called when a task has finished; checks for t-2 and updates stats
@@ -67,9 +68,9 @@ void schedule_task_finished(struct PBS_Plan *p){
     if ( check_tm2_task(p->cur_task)){
         //TODO: signal tm2
         signal_tm2(p);
-        printf("[SCHEDULE_TASK_FINISHED]%ld: PBS_Task%ld finished early\n",p->tick_counter, p->cur_task->task_id);
+        printf(KERN_WARNING "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished early\n",p->tick_counter, p->cur_task->task_id);
     } else {
-        printf("[SCHEDULE_TASK_FINISHED]%ld: PBS_Task%ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
+        printf(KERN_INFO "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
                p->cur_task->instructions_planned, p->cur_task->instructions_real, p->cur_task->instructions_retired_slot);
     }
 
@@ -115,7 +116,7 @@ void schedule_timer_tick(struct PBS_Plan *p){
         return;
     }
     if(LOG_PBS)
-        printf("[SCHEDULE_TIMER]%ld: (%ld,%ld) retired instructions %ld\n",
+        printf(KERN_INFO "[PBS_schedule_timer_tick]%ld: (%ld,%ld) retired instructions %ld\n",
            p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
     p->stress--;
 }
@@ -136,7 +137,7 @@ void switch_task(struct PBS_Plan* p){
         handle_free_slot(p);
     }
     if(LOG_PBS)
-        printf("[SWITCH_TASK]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
+        printf(KERN_INFO "[PBS_switch_task]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
 }
 
 /**
@@ -149,7 +150,7 @@ void handle_free_slot(struct PBS_Plan* p){
 
     assert(p->cur_task->task_id == -1);
     assert(p->cur_process->process_id == -1);
-    printf("[HANDLE_FREE_SLOT]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
+    printf(KERN_INFO "[PBS_handle_free_slot]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
     long lateness_node_before = p->lateness;
     struct PBS_Task* free_slot = p->tasks;
     p->index_cur_task++;
