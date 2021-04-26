@@ -7,18 +7,18 @@
 #include "kernel_dummies.h"
 
 #include "pbs_entities.h"
-#include "plan/plan.h"
+#include "plan.h"
 #include "threshold_checking.h"
 #include "prediction_failure_config.h"
 
+
 long calculate_t1(struct PBS_Task*);
-long calculate_t2_task(struct PBS_Task *task, struct PBS_Plan *p);
+long calculate_t2_task( struct PBS_Plan *p);
 
 long calculate_t1(struct PBS_Task* task){
     long t1_relative, t1_minimum, t1_maximum, t1;
     t1_minimum = task->instructions_planned + NO_PREEMPTION;
-    // todo: problematic conversion
-    t1_relative = (long) (task->instructions_planned * SIGMA_T1);
+    t1_relative = task->instructions_planned * SIGMA_T1;
     t1_maximum = task->instructions_planned + NO_PREEMPTION;
     if(0)
         printf("[t1] task %ld: instructions_planned=%ld, t1_min=%ld, t1_relative=%ld, t1_max=%ld\n", task->task_id,
@@ -34,7 +34,8 @@ long calculate_t1(struct PBS_Task* task){
 }
 
 short check_t1(struct PBS_Plan* p) {
-
+    if(!T1_ENABLED)
+        return OK;
     struct PBS_Task* task_to_check;
     //task was moved and is not in original slot anymore
     if (p->cur_task->slot_owner == SHARES_NO_SLOT){
@@ -51,7 +52,8 @@ short check_t1(struct PBS_Plan* p) {
     }
 }
 
-long calculate_t2_task(struct PBS_Task *task,struct PBS_Plan *p) {
+long calculate_t2_task(struct PBS_Plan *p) {
+    struct PBS_Task* task = p->cur_task;
     long t2_task, t2_task_min, t2_task_relative, t1;
     t1 = calculate_t1(task);
     t2_task_min = (long) (t1 + T2_SPACER);
@@ -68,16 +70,21 @@ long calculate_t2_task(struct PBS_Task *task,struct PBS_Plan *p) {
     return t2_task;
 
 }
-short check_t2_task(struct PBS_Task *task, struct PBS_Plan *p) {
-    long t2_task = calculate_t2_task(task, p);
+short check_t2_task( struct PBS_Plan *p) {
+    if(!T2_TASK_ENABLED)
+        return OK;
+    long t2_task = calculate_t2_task(p);
     // compare
-    if (task->instructions_retired_slot >= t2_task)
+    if (p->cur_task->instructions_retired_slot >= t2_task)
         return T2;
     else
         return OK;
 }
 
-short check_tm2_task(struct PBS_Task* task){
+short check_tm2_task(struct PBS_Plan* p){
+    if (!TM2_TASK_ENABLED)
+        return OK;
+    struct PBS_Task* task = p->cur_task;
     long plan_length = task->instructions_planned;
     long tm2_task = (plan_length * CAP_LATENESS/10) / 100;
     assert(tm2_task < plan_length);
@@ -88,12 +95,15 @@ short check_tm2_task(struct PBS_Task* task){
         return OK;
 }
 
-short check_t2_process(struct PBS_Process *process, long usable_buffer) {
+short check_t2_process(struct PBS_Plan* p) {
+    if (!T2_PROCESS_ENABLED)
+        return OK;
     // TODO: HIER WEITER
     return OK;
 }
-short check_tm2_process(struct PBS_Process * process) {
-
+short check_tm2_process(struct PBS_Plan* p) {
+    if (!TM2_PROCESS_ENABLED)
+        return OK;
     return OK;
 }
 
@@ -122,10 +132,12 @@ long calculate_usable_buffer(int free_time, int assignable_buffer, long buffer, 
 }
 
 short check_t2_node(struct PBS_Plan* plan){
-
+    if (!T2_NODE_ENABLED)
+        return OK;
     return OK;
 }
 short check_tm2_node(struct PBS_Plan* plan){
-
+    if (!TM2_NODE_ENABLED)
+        return OK;
     return OK;
 }

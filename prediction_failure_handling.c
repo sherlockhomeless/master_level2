@@ -5,7 +5,7 @@
 #include "kernel_dummies.h"
 #include "pbs_entities.h"
 #include "prediction_failure_handling.h"
-#include "plan/plan.h"
+#include "plan.h"
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>

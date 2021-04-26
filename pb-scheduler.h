@@ -2,7 +2,7 @@
 // Created by ml on 26.03.21.
 //
 
-#include "plan/plan.h"
+#include "plan.h"
 #include "pbs_entities.h"
 
 #ifndef LEVEL2_PB_SCHEDULER_H

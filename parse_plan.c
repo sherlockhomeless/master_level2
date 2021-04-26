@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "plan.h"
-#include "../prediction_failure_config.h"
-#include "../pbs_entities.h"
+#include "prediction_failure_config.h"
+#include "pbs_entities.h"
 
 
 // defining symbols for parsing

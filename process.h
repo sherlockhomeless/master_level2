@@ -9,4 +9,7 @@
 
 void update_retired_instructions_process(long instructions,struct PBS_Process*  process);
 void update_lateness_process(long late_instructions,struct PBS_Process* process);
+void update_finished_tasks_in_process(struct PBS_Process* process);
+
+
 short is_process_late(struct PBS_Process*);

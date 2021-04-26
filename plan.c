@@ -1,12 +1,12 @@
 #include <stdio.h>
 
-#include "../kernel_dummies.h"
-#include "../pbs_entities.h"
+#include "kernel_dummies.h"
+#include "pbs_entities.h"
 #include "plan.h"
 #include "assert.h"
-#include "../task.h"
-#include "../process.h"
-#include "../prediction_failure_config.h"
+#include "task.h"
+#include "process.h"
+#include "prediction_failure_config.h"
 // --- Task States ---
 #define ON_TIME 0
 #define TURNS_LATE 1

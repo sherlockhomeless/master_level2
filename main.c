@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "plan/plan.h"
+#include "plan.h"
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
@@ -166,11 +166,11 @@ void check_signal_t2_task(struct PBS_Plan *p){
 void check_thresholds(struct PBS_Plan* p){
     short result;
     result = check_t1(p);
-    result = check_t2_task(p->cur_task, p);
-    result = check_tm2_task(p->cur_task);
+    result = check_t2_task(p);
+    result = check_tm2_task(p);
 
-    result = check_t2_process(p->cur_process, 0);
-    result = check_tm2_process(p->cur_process);
+    result = check_t2_process(p);
+    result = check_tm2_process(p);
 
     result = check_t2_node(p);
     result = check_tm2_node(p);

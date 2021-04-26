@@ -25,3 +25,7 @@ short is_process_late(struct PBS_Process* process){
     else
         return 1;
 }
+
+void update_finished_tasks_in_process(struct PBS_Process* process){
+    process->num_tasks_remaining--;
+}

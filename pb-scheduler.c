@@ -8,7 +8,7 @@
 #include "kernel_dummies.h"
 #include "pb-scheduler.h"
 #include "pmu_interface.h"
-#include "plan/plan.h"
+#include "plan.h"
 #include "process.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
@@ -25,7 +25,6 @@ void handle_free_slot(struct PBS_Plan*);
  * @param p
  */
 void schedule(struct PBS_Plan *p) {
-    printf(KERN_INFO "NUM_TASSKS: %ld", p->num_tasks);
     assert(p->num_tasks < 400);
     if (p->cur_task->task_id == -2){
         printf(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);
@@ -65,7 +64,7 @@ void schedule_task_finished(struct PBS_Plan *p){
     // --- check ---
     // todo: include other threshold-checks
     // check_tm2_node(p) && check_tm2_process(p->cur_process) &&
-    if ( check_tm2_task(p->cur_task)){
+    if ( check_tm2_task(p)){
         //TODO: signal tm2
         signal_tm2(p);
         printf(KERN_WARNING "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished early\n",p->tick_counter, p->cur_task->task_id);
@@ -95,16 +94,14 @@ void schedule_task_finished(struct PBS_Plan *p){
 void schedule_timer_tick(struct PBS_Plan *p){
     //todo: test stress
     //todo: preemptions
-
-
     // --- check for t2 ---
     if(p->stress <= 0) {
         p->state = ON_PLAN;
         long usable_buffer = calculate_usable_buffer(FREE_TIME, ASSIGNABLE_BUFFER, p->cur_process->buffer,
                                                      p->cur_process->length_plan,
                                                      p->cur_process->instructions_retired);
-        if (check_t2_task(p->cur_task, p) ||
-            check_t2_process(p->cur_process, usable_buffer) ||
+        if (check_t2_task(p) ||
+            check_t2_process(p) ||
             check_t2_node(p))            {
             signal_t2(p);
         }

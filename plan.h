@@ -1,7 +1,7 @@
 #ifndef LEVEL2_PLAN_H
 #define LEVEL2_PLAN_H
 
-#include "../prediction_failure_config.h"
+#include "prediction_failure_config.h"
 
 #define ON_PLAN 0
 #define SIGNALED 1
