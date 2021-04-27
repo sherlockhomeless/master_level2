@@ -1,9 +1,9 @@
 #include <stdio.h>
+#include <assert.h>
 
 #include "kernel_dummies.h"
 #include "pbs_entities.h"
 #include "plan.h"
-#include "assert.h"
 #include "task.h"
 #include "process.h"
 #include "prediction_failure_config.h"
@@ -37,13 +37,14 @@ short does_task_turn_late(long instructions_to_run, struct PBS_Task* task){
  * @param p
  */
 void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
+    struct PBS_Task * slot_owner;
+    short task_state;
     if (instructions_retired < 0){
         update_free_space_usage(instructions_retired, p);
         return;
     }
 
-    struct PBS_Task * slot_owner;
-    short task_state = does_task_turn_late(instructions_retired, p->cur_task);
+    task_state = does_task_turn_late(instructions_retired, p->cur_task);
 
     // --- update on tasks ---
     update_retired_instructions_task(instructions_retired, p->cur_task);
@@ -67,7 +68,6 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
  * @param p
  */
 void update_cur_task_process(struct PBS_Plan *p) {
-    struct PBS_Task old_cur_task = *p->cur_task;
     change_task_state(p->cur_task, PLAN_TASK_RUNNING);
     if (p->cur_task->task_id != -1)
         p->cur_process = &p->processes[p->cur_task->process_id];
@@ -112,31 +112,6 @@ void update_node_lateness(long instructions, struct PBS_Plan* p){
 void change_plan_state(struct PBS_Plan* p, short state){
     p->state = state;
     printf(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
-}
-
-void show_tasks(struct PBS_Plan* p){
-    struct PBS_Task task_list[MAX_NUMBER_TASKS_IN_PLAN];
-    for (int i = 0; i < p->num_tasks; i++){
-        task_list[i] = *(p->tasks + i);
-    }
-    printf("[SHOW_TASKS]%ld:", p->tick_counter);
-    for (int i = 0; i < p->num_tasks; i++){
-        printf("%d:(%ld, %ld) ", i, task_list[i].task_id, task_list[i].process_id);
-    }
-    printf("!\n");
-}
-
-void write_binary_to_file(struct PBS_Plan* plan, char* binary_path){
-    FILE *fp;
-    fp = fopen(binary_path, "w");
-
-    if (fp == NULL){
-        printf("error opening file\n");
-        return;
-    }
-
-    //https://www.tutorialspoint.com/c_standard_library/c_function_fwrite.htm
-    fwrite(plan, sizeof(struct PBS_Plan),1, fp);
 }
 
 void fill_empty_test_plan(struct PBS_Plan* p){

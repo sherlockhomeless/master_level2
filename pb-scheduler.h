@@ -11,6 +11,6 @@
 #endif //LEVEL2_PB_SCHEDULER_H
 
 // --- interface ---
-void schedule(struct PBS_Plan *p);
+void schedule_pbs(struct PBS_Plan *p);
 
 

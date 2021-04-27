@@ -6,3 +6,5 @@
 #define KERN_NOTICE		/* normal but significant condition */
 #define KERN_INFO		/* informational */
 #define KERN_DEBUG		/* debug-level messages */
+
+#define EXPORT_SYMBOL(s)

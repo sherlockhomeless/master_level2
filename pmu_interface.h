@@ -7,4 +7,4 @@
 
 #endif //LEVEL2_PMU_INTERFACE_H
 
-long get_retired_instructions();
+long get_retired_instructions(void);

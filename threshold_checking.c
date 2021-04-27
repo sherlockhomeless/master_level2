@@ -34,9 +34,12 @@ long calculate_t1(struct PBS_Task* task){
 }
 
 short check_t1(struct PBS_Plan* p) {
-    if(!T1_ENABLED)
-        return OK;
     struct PBS_Task* task_to_check;
+    long t1;
+
+    if(!T1_ENABLED) {
+        return OK;
+    }
     //task was moved and is not in original slot anymore
     if (p->cur_task->slot_owner == SHARES_NO_SLOT){
         //todo: stack check, is >1 one task in new slot
@@ -44,7 +47,7 @@ short check_t1(struct PBS_Plan* p) {
     } else {
         task_to_check =  find_task_with_task_id(p, p->cur_task->slot_owner);
     }
-    long t1 = calculate_t1(task_to_check);
+     t1 = calculate_t1(task_to_check);
     if(task_to_check->instructions_retired_slot >= t1){
         return T1;
     } else {
@@ -71,9 +74,10 @@ long calculate_t2_task(struct PBS_Plan *p) {
 
 }
 short check_t2_task( struct PBS_Plan *p) {
+    long t2_task;
     if(!T2_TASK_ENABLED)
         return OK;
-    long t2_task = calculate_t2_task(p);
+    t2_task = calculate_t2_task(p);
     // compare
     if (p->cur_task->instructions_retired_slot >= t2_task)
         return T2;
@@ -82,11 +86,12 @@ short check_t2_task( struct PBS_Plan *p) {
 }
 
 short check_tm2_task(struct PBS_Plan* p){
-    if (!TM2_TASK_ENABLED)
-        return OK;
     struct PBS_Task* task = p->cur_task;
     long plan_length = task->instructions_planned;
     long tm2_task = (plan_length * CAP_LATENESS/10) / 100;
+    if (!TM2_TASK_ENABLED) {
+        return OK;
+    }
     assert(tm2_task < plan_length);
 
     if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED)

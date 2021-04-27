@@ -5,7 +5,8 @@ import shutil
 import os
 import re
 
-IGNORE_FILES = ('test', '.*.txt', 'kernel_dummies.h', '.*.py', '.git', 'cmake-build-debug', 'main.c', '.idea')
+IGNORE_FILES = ('test', '.*.txt', 'kernel_dummies.h', '.*.py', '.git', 'cmake-build-debug', 'main.c', '.idea', 'parse_plan.c',
+'userland_only.*')
 
 class SrcFile:
     def __init__(self, file_name, content):
@@ -20,9 +21,17 @@ def main(src, dest):
     print('### remove kernel_dummies header ### ')
     reg_ex = re.compile(".*kernel_dummies.*")
     iterate_lines(target_files, lambda line: "" if reg_ex.match(line) else line)
+    print("### removing assert-statements ###")
+    reg_ex = re.compile('.*assert(.*);')
+    iterate_lines(target_files, lambda line: "" if reg_ex.match(line) else line)
     print('### printf -> printk ###')
     iterate_lines(target_files, lambda line: line.replace('printf', 'printk'), print_log=False)
+    print('### add kernel headers ###')
+    add_kernel_header(filter(lambda file: True if ".c" in file.file_name else False, target_files), ("#include <linux/kernel.h>", ""))
     write_to_file(target_files, dest)
+    print('### generating makefile ###')
+    create_makefile(target_files, dest)
+
 
 def iterate_lines(all_files, func, print_log=True):
     """
@@ -41,6 +50,14 @@ def iterate_lines(all_files, func, print_log=True):
         f.content = new_content
         new_content = []
 
+def add_kernel_header(file_list, headers):
+    for header in headers:
+        for file in file_list:
+            file_content = file.content
+            file_content.insert(0,header + '\n')
+            file.content = file_content
+        print(f'added {header}')
+
 
 def get_files_in_folder(src) -> [SrcFile]:
     target_files = []
@@ -55,7 +72,14 @@ def get_files_in_folder(src) -> [SrcFile]:
                 target_files.append(SrcFile(file, f.readlines() ))
     return target_files
 
-
+def create_makefile(files, dest):
+    object_list = "obj-y += "
+    for f in files:
+        if ".c" in f.file_name:
+            object_list = f'{object_list} {f.file_name.replace(".c", ".o")} '
+    with open(os.path.join(dest, "Makefile"), 'w') as f:
+        f.write(object_list)
+        print(f'write object_list')
 
 def write_to_file(files, dest):
     for file in files:

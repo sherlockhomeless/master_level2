@@ -15,7 +15,6 @@
 struct PBS_Plan* parse_plan(char*,struct PBS_Plan*);
 void update_retired_instructions(long instructions_retired,struct PBS_Plan *p);
 void update_cur_task_process(struct PBS_Plan*);
-void write_binary_to_file(struct PBS_Plan*, char*);
 
 // --- helper functions ---
 struct PBS_Task* find_task_with_task_id(struct PBS_Plan* , long);

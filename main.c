@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "userland_only_helper.h"
 #include "plan.h"
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
@@ -47,7 +48,8 @@ int main(){
 }
 
 int test_run(){
-    PredictionFailureSignal*  sig;
+    int i;
+    struct PredictionFailureSignal*  sig;
     struct PBS_Task* cur_task;
     struct PBS_Plan plan = {0};
     struct PBS_Plan* plan_ptr = &plan;
@@ -60,19 +62,20 @@ int test_run(){
     check_run_task_late_time(plan_ptr);
     check_preempt_task(plan_ptr);
     while(plan_ptr->state != PLAN_FINISHED) {
-        schedule(plan_ptr);
+        schedule_pbs(plan_ptr);
     }
 
-    for (int i = 0; i < 3; i++){
-        sig = get_signal(i);
+    for ( i = 0; i < 3; i++){
+        sig = get_pbs_signal(i);
         //FIXME: Signals are trash
         printf("signal: tick=%ld type=%d, task=%ld, process=%ld\n",
-               sig->tick, sig->type_signal, sig->cur_task_id, sig->cur_process_id);
+               sig->tick, sig->type_signal, sig->task_id, sig->process_id);
     }
     return 0;
 }
 // t0
 void check_run_task_on_time(struct PBS_Plan* plan){
+    int i;
     long ins_per_tick = INS_PER_TICK;
     int ticks_to_finish_first_task;
     long lateness_after_1_task;
@@ -85,8 +88,8 @@ void check_run_task_on_time(struct PBS_Plan* plan){
 
     // finish first task
     ticks_to_finish_first_task = (int) (plan->cur_task->instructions_real / (long) ins_per_tick) + 1;
-    for(int i = 0; i < ticks_to_finish_first_task; i++){
-        schedule(plan);
+    for( i = 0; i < ticks_to_finish_first_task; i++){
+        schedule_pbs(plan);
     }
     lateness_after_1_task = first_task->instructions_real - first_task->instructions_planned;
 
@@ -103,7 +106,7 @@ void check_run_task_early_time(struct PBS_Plan * p) {
     long ticks_to_finish = p->cur_task->instructions_real / INS_PER_TICK;
     p->cur_task->instructions_real = p->cur_task->instructions_planned - 100;
     while (p->cur_task == t1_addr){
-        schedule(p);
+        schedule_pbs(p);
     }
     ticks_end = p->tick_counter;
     duration = ticks_end - ticks_start;
@@ -118,7 +121,7 @@ void check_run_task_tm2_early_time(struct PBS_Plan *p){
     assert(p->cur_task->instructions_real < p->cur_task->instructions_planned);
     while (t_2->state != PLAN_TASK_FINISHED){
         assert(p->cur_task->task_id == 2);
-        schedule(p);
+        schedule_pbs(p);
     }
     assert(p->state == SIGNALED);
 
@@ -131,7 +134,7 @@ void check_run_task_late_time(struct PBS_Plan *p){
 
     while (t3->state != PLAN_TASK_FINISHED){
         assert(p->cur_task->task_id == 3);
-        schedule(p);
+        schedule_pbs(p);
     }
 
 }
@@ -146,7 +149,7 @@ void check_preempt_task(struct PBS_Plan *p){
     long t4_id = p->cur_task->task_id;
     p->cur_task->instructions_real = p->cur_task->instructions_planned + PREEMPTION_LIMIT + 1;
     while(p->cur_task->task_id == t4_id){
-        schedule(p);
+        schedule_pbs(p);
     }
 
     new_addr_t4 = find_task_with_task_id(p, t4_id);
@@ -214,13 +217,13 @@ long get_file_size(FILE* fp){
 }
 
 /**
- * Runs schedule method and updates pointer t if plan is changed
+ * Runs schedule_pbs method and updates pointer t if plan is changed
  * @param p
  * @param t
  */
 struct PBS_Task * run(struct PBS_Plan* p, struct PBS_Task* t){
     long cur_task_id = t->task_id;
-    schedule(p);
+    schedule_pbs(p);
     if (cur_task_id != p->cur_task->task_id){
         return find_task_with_task_id(p, cur_task_id);
     } else {
@@ -247,6 +250,7 @@ void test_task_moving(){
 }
 
 void test_find_slot_to_move_to(){
+    int i;
     struct PBS_Plan p = {0};
     fill_empty_test_plan(&p);
     struct PBS_Process processes [MAX_NUMBER_PROCESSES];
@@ -254,7 +258,7 @@ void test_find_slot_to_move_to(){
     long order[5] = {0,1,2,3,0};
     long index;
 
-    for (int i = 0; i < 5; i++){
+    for ( i = 0; i < 5; i++){
         p.tasks[i].process_id = order[i];
     }
 
@@ -263,11 +267,12 @@ void test_find_slot_to_move_to(){
 }
 
 void test_move_others(){
+    int i;
     struct PBS_Plan p = {0};
     fill_empty_test_plan(&p);
     struct PBS_Task* tasks = &p.tasks[0];
     long order[5] = {0,1,2,3,4};
-    for(int i = 0; i < 5; i++){
+    for( i = 0; i < 5; i++){
         tasks[i].process_id = order [i];
         tasks[i].task_id = order[i];
         tasks[i].slot_owner = SHARES_NO_SLOT;
@@ -278,7 +283,7 @@ void test_move_others(){
     assert(tasks[3].task_id == 4);
 
 
-    for (int i = 0; i < 5; i++){
+    for ( i = 0; i < 5; i++){
         tasks[i].task_id = order[i];
     }
 
@@ -288,12 +293,13 @@ void test_move_others(){
 }
 
 void test_insert_preempted_tasks() {
+    int i;
     struct PBS_Plan p = {0};
     fill_empty_test_plan(&p);
     struct PBS_Task* tasks = &p.tasks[0];
 
     long order[5] = {0,1,2,3,4};
-    for(int i = 0; i < 5; i++){
+    for( i = 0; i < 5; i++){
         tasks[i].process_id = order [i];
         tasks[i].task_id = order[i];
     }

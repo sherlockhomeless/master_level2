@@ -24,7 +24,8 @@ void handle_free_slot(struct PBS_Plan*);
  * Is called by the tick-function after each timer interrupt
  * @param p
  */
-void schedule(struct PBS_Plan *p) {
+void schedule_pbs(struct PBS_Plan *p) {
+    long retired_instructions;
     assert(p->num_tasks < 400);
     if (p->cur_task->task_id == -2){
         printf(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);
@@ -32,10 +33,10 @@ void schedule(struct PBS_Plan *p) {
         return;
     }
     //todo: Just for checking:
-    long retired_instructions = get_retired_instructions();
+    retired_instructions = get_retired_instructions();
     update(retired_instructions, p);
 
-    if(p->cur_task->state == PLAN_TASK_FINISHED){ // schedule() was called after a task has finished
+    if(p->cur_task->state == PLAN_TASK_FINISHED){ // schedule_pbs() was called after a task has finished
         schedule_task_finished(p);
     } else {
         schedule_timer_tick(p);
@@ -54,6 +55,8 @@ void update(long retired_instructions, struct PBS_Plan* p){
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_update]%ld: (%ld,%ld): instructions_retired_slot: %ld \n", p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
 }
+EXPORT_SYMBOL(update);
+
 /**
  * Is called when a task has finished; checks for t-2 and updates stats
  * @param p
@@ -92,12 +95,13 @@ void schedule_task_finished(struct PBS_Plan *p){
  * @param p
  */
 void schedule_timer_tick(struct PBS_Plan *p){
+    long usable_buffer;
     //todo: test stress
     //todo: preemptions
     // --- check for t2 ---
     if(p->stress <= 0) {
         p->state = ON_PLAN;
-        long usable_buffer = calculate_usable_buffer(FREE_TIME, ASSIGNABLE_BUFFER, p->cur_process->buffer,
+        usable_buffer = calculate_usable_buffer(FREE_TIME, ASSIGNABLE_BUFFER, p->cur_process->buffer,
                                                      p->cur_process->length_plan,
                                                      p->cur_process->instructions_retired);
         if (check_t2_task(p) ||
@@ -144,16 +148,19 @@ void switch_task(struct PBS_Plan* p){
  * @param p
  */
 void handle_free_slot(struct PBS_Plan* p){
+    long lateness_node_before,  lateness_node_after;
+    struct PBS_Task* free_slot;
 
     assert(p->cur_task->task_id == -1);
     assert(p->cur_process->process_id == -1);
+
     printf(KERN_INFO "[PBS_handle_free_slot]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
-    long lateness_node_before = p->lateness;
-    struct PBS_Task* free_slot = p->tasks;
+    lateness_node_before = p->lateness;
+    free_slot = p->tasks;
     p->index_cur_task++;
     p->cur_task++;
     update_cur_task_process(p);
     update_retired_instructions(- free_slot->instructions_planned, p);
-    long lateness_node_after = p->lateness;
+    lateness_node_after = p->lateness;
     assert(lateness_node_before > lateness_node_after);
 }
