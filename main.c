@@ -62,7 +62,7 @@ int test_run(){
     check_run_task_late_time(plan_ptr);
     check_preempt_task(plan_ptr);
     while(plan_ptr->state != PLAN_FINISHED) {
-        schedule_pbs(plan_ptr);
+        pbs_handle_prediction_failure(plan_ptr);
     }
 
     for ( i = 0; i < 3; i++){
@@ -89,7 +89,7 @@ void check_run_task_on_time(struct PBS_Plan* plan){
     // finish first task
     ticks_to_finish_first_task = (int) (plan->cur_task->instructions_real / (long) ins_per_tick) + 1;
     for( i = 0; i < ticks_to_finish_first_task; i++){
-        schedule_pbs(plan);
+        pbs_handle_prediction_failure(plan);
     }
     lateness_after_1_task = first_task->instructions_real - first_task->instructions_planned;
 
@@ -106,7 +106,7 @@ void check_run_task_early_time(struct PBS_Plan * p) {
     long ticks_to_finish = p->cur_task->instructions_real / INS_PER_TICK;
     p->cur_task->instructions_real = p->cur_task->instructions_planned - 100;
     while (p->cur_task == t1_addr){
-        schedule_pbs(p);
+        pbs_handle_prediction_failure(p);
     }
     ticks_end = p->tick_counter;
     duration = ticks_end - ticks_start;
@@ -121,7 +121,7 @@ void check_run_task_tm2_early_time(struct PBS_Plan *p){
     assert(p->cur_task->instructions_real < p->cur_task->instructions_planned);
     while (t_2->state != PLAN_TASK_FINISHED){
         assert(p->cur_task->task_id == 2);
-        schedule_pbs(p);
+        pbs_handle_prediction_failure(p);
     }
     assert(p->state == SIGNALED);
 
@@ -134,7 +134,7 @@ void check_run_task_late_time(struct PBS_Plan *p){
 
     while (t3->state != PLAN_TASK_FINISHED){
         assert(p->cur_task->task_id == 3);
-        schedule_pbs(p);
+        pbs_handle_prediction_failure(p);
     }
 
 }
@@ -149,7 +149,7 @@ void check_preempt_task(struct PBS_Plan *p){
     long t4_id = p->cur_task->task_id;
     p->cur_task->instructions_real = p->cur_task->instructions_planned + PREEMPTION_LIMIT + 1;
     while(p->cur_task->task_id == t4_id){
-        schedule_pbs(p);
+        pbs_handle_prediction_failure(p);
     }
 
     new_addr_t4 = find_task_with_task_id(p, t4_id);
@@ -217,13 +217,13 @@ long get_file_size(FILE* fp){
 }
 
 /**
- * Runs schedule_pbs method and updates pointer t if plan is changed
+ * Runs pbs_handle_prediction_failure method and updates pointer t if plan is changed
  * @param p
  * @param t
  */
 struct PBS_Task * run(struct PBS_Plan* p, struct PBS_Task* t){
     long cur_task_id = t->task_id;
-    schedule_pbs(p);
+    pbs_handle_prediction_failure(p);
     if (cur_task_id != p->cur_task->task_id){
         return find_task_with_task_id(p, cur_task_id);
     } else {

@@ -33,6 +33,8 @@ long calculate_t1(struct PBS_Task* task){
     return t1;
 }
 
+EXPORT_SYMBOL(calculate_t1);
+
 short check_t1(struct PBS_Plan* p) {
     struct PBS_Task* task_to_check;
     long t1;
@@ -55,6 +57,8 @@ short check_t1(struct PBS_Plan* p) {
     }
 }
 
+EXPORT_SYMBOL(check_t1);
+
 long calculate_t2_task(struct PBS_Plan *p) {
     struct PBS_Task* task = p->cur_task;
     long t2_task, t2_task_min, t2_task_relative, t1;
@@ -71,8 +75,10 @@ long calculate_t2_task(struct PBS_Plan *p) {
         t2_task = t2_task_relative;
 
     return t2_task;
-
 }
+
+EXPORT_SYMBOL(calculate_t2_task);
+
 short check_t2_task( struct PBS_Plan *p) {
     long t2_task;
     if(!T2_TASK_ENABLED)
@@ -84,6 +90,8 @@ short check_t2_task( struct PBS_Plan *p) {
     else
         return OK;
 }
+
+EXPORT_SYMBOL(check_t2_task);
 
 short check_tm2_task(struct PBS_Plan* p){
     struct PBS_Task* task = p->cur_task;
@@ -100,17 +108,24 @@ short check_tm2_task(struct PBS_Plan* p){
         return OK;
 }
 
+EXPORT_SYMBOL(check_tm2_task);
+
 short check_t2_process(struct PBS_Plan* p) {
     if (!T2_PROCESS_ENABLED)
         return OK;
     // TODO: HIER WEITER
     return OK;
 }
+
+EXPORT_SYMBOL(check_t2_process);
+
 short check_tm2_process(struct PBS_Plan* p) {
     if (!TM2_PROCESS_ENABLED)
         return OK;
     return OK;
 }
+
+EXPORT_SYMBOL(check_tm2_process);
 
 /**
  * Calculates the usable_buffer, float-values have to be given as integers because of kernel limitations
@@ -136,13 +151,20 @@ long calculate_usable_buffer(int free_time, int assignable_buffer, long buffer, 
     return usable_buffer;
 }
 
+EXPORT_SYMBOL(calculate_usable_buffer);
+
 short check_t2_node(struct PBS_Plan* plan){
     if (!T2_NODE_ENABLED)
         return OK;
     return OK;
 }
+
+EXPORT_SYMBOL(check_t2_node);
+
 short check_tm2_node(struct PBS_Plan* plan){
     if (!TM2_NODE_ENABLED)
         return OK;
     return OK;
 }
+
+EXPORT_SYMBOL(check_tm2_node);

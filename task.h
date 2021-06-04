@@ -9,7 +9,7 @@
 
 #endif //LEVEL2_TASK_H
 
-void update_retired_instructions_task(long instructions,struct PBS_Task *task);
+void pbs_update_retired_instructions_task(long instructions, struct PBS_Task *task);
 void change_task_state(struct PBS_Task *t, short state);
 
 

@@ -20,7 +20,6 @@ void update_cur_task_process(struct PBS_Plan*);
 struct PBS_Task* find_task_with_task_id(struct PBS_Plan* , long);
 void update_node_lateness(long , struct PBS_Plan* );
 void change_plan_state(struct PBS_Plan*, short);
-void show_tasks(struct PBS_Plan*);
 
 // --- for testing ---
 void fill_empty_test_plan(struct PBS_Plan* p);

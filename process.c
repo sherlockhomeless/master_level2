@@ -14,10 +14,14 @@ void update_retired_instructions_process(long instructions, struct PBS_Process* 
     process->instructions_retired += instructions;
 }
 
+EXPORT_SYMBOL(update_retired_instructions_process);
+
 
 void update_lateness_process(long late_instructions, struct PBS_Process* process){
     process->lateness += late_instructions;
 }
+
+EXPORT_SYMBOL(update_lateness_process);
 
 short is_process_late(struct PBS_Process* process){
     if(process->lateness < 0)
@@ -25,7 +29,10 @@ short is_process_late(struct PBS_Process* process){
     else
         return 1;
 }
+EXPORT_SYMBOL(is_process_late);
 
 void update_finished_tasks_in_process(struct PBS_Process* process){
     process->num_tasks_remaining--;
 }
+
+EXPORT_SYMBOL(update_finished_tasks_in_process);

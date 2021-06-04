@@ -31,6 +31,8 @@ short does_task_turn_late(long instructions_to_run, struct PBS_Task* task){
         return ON_TIME;
 }
 
+EXPORT_SYMBOL(does_task_turn_late);
+
 /**
  * Updates all data structures that are required for threshold tracking and calculating, also updates the state of a task accordingly
  * @param instructions_retired PMU-Counter since it was last read
@@ -47,7 +49,7 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
     task_state = does_task_turn_late(instructions_retired, p->cur_task);
 
     // --- update on tasks ---
-    update_retired_instructions_task(instructions_retired, p->cur_task);
+    pbs_update_retired_instructions_task(instructions_retired, p->cur_task);
 
     // --- update retired instructions on slot ---
     if (p->cur_task->slot_owner == SHARES_NO_SLOT){
@@ -73,7 +75,8 @@ void update_cur_task_process(struct PBS_Plan *p) {
         p->cur_process = &p->processes[p->cur_task->process_id];
     else
         p->cur_process = &p->processes[MAX_NUMBER_PROCESSES -1];
-    printf(KERN_INFO "[PBS_update_cur_task_process]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
+    if(LOG_PBS)
+        printf(KERN_INFO "[PBS_update_cur_task_process]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
            p->cur_task->task_id, p->cur_task->process_id);
 }
 
@@ -111,7 +114,8 @@ void update_node_lateness(long instructions, struct PBS_Plan* p){
 }
 void change_plan_state(struct PBS_Plan* p, short state){
     p->state = state;
-    printf(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
+    if (LOG_PBS)
+        printf(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
 }
 
 void fill_empty_test_plan(struct PBS_Plan* p){

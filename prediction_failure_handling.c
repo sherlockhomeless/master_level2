@@ -28,7 +28,8 @@ void handle_no_preemption_slot_found(struct PBS_Plan *p);
 void signal_t2(struct PBS_Plan* p){
     struct PredictionFailureSignal sig;
     change_plan_state(p, SIGNALED);
-    printf(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
+    if (LOG_PBS)
+        printf(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
     p->stress = STRESS_PER_SIGNAL;
 
     sig.task_id = p->cur_task->task_id,
@@ -41,10 +42,13 @@ void signal_t2(struct PBS_Plan* p){
     reschedule(p, STRETCH_SIGNAL);
 }
 
+EXPORT_SYMBOL(signal_t2);
+
 void signal_tm2(struct PBS_Plan* p){
     struct PredictionFailureSignal  sig;
     change_plan_state(p, SIGNALED);
-    printf(KERN_ALERT"[PBS_signal_tm2]%ld: signaled prediction failure for task %ld\n",p->tick_counter, p->cur_task->task_id);
+    if (LOG_PBS)
+        printf(KERN_ALERT"[PBS_signal_tm2]%ld: signaled prediction failure for task %ld\n",p->tick_counter, p->cur_task->task_id);
     p->stress = STRESS_PER_SIGNAL;
 
     sig.task_id = p->cur_task->task_id,
@@ -56,6 +60,9 @@ void signal_tm2(struct PBS_Plan* p){
 
     reschedule(p, SHRINK_SIGNAL);
 }
+
+EXPORT_SYMBOL(signal_tm2);
+
 /**
  * Implements a task preemption for the current task, does the following actions:
  * - checks if more then one PBS_Task is assigned to the current slot
@@ -88,6 +95,8 @@ void preempt_cur_task(struct PBS_Plan* p){
                insertion_slot , p->tasks[insertion_slot+1].task_id);
 }
 
+EXPORT_SYMBOL(preempt_cur_task);
+
 void handle_no_preemption_slot_found(struct PBS_Plan *p) {//fixme: how to deal with this issue? State: Just sign PBS_Taskfinished
     long instructions_missing = p->cur_task->instructions_real - p->cur_task->instructions_retired_task;
     printf(KERN_ALERT"[PBS_handle_no_preemption_slot_found]%ld: Found no other slot to move task to \n", p->tick_counter);
@@ -95,6 +104,8 @@ void handle_no_preemption_slot_found(struct PBS_Plan *p) {//fixme: how to deal w
     printf(KERN_EMERG "[PBS_handle_no_preemption_slot_found]%ld: no preemption slot found\n", p->tick_counter);
     p->state = PLAN_FINISHED;
 }
+
+EXPORT_SYMBOL(handle_no_preemption_slot_found);
 
 /**
  * Searches the task list of p and tries to find the next slot where a task with target_pid might fit in.
@@ -118,7 +129,8 @@ long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
         pid = next_slot->process_id;
         state = next_slot->state;
         if (pid == target_pid){
-            printf(KERN_DEBUG "[PBS_find_slot_to_move_to]%ld, found slot %ld for (%ld, %ld)\n",p->tick_counter, counter - 1, p->cur_task->task_id, p->cur_task->process_id);
+            if (LOG_PBS)
+                printf(KERN_DEBUG "[PBS_find_slot_to_move_to]%ld, found slot %ld for (%ld, %ld)\n",p->tick_counter, counter - 1, p->cur_task->task_id, p->cur_task->process_id);
             assert(counter >= 1 );
             return counter - 1;
         }
@@ -127,6 +139,8 @@ long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
     }
     return -2;
 }
+
+EXPORT_SYMBOL(find_slot_to_move_to);
 
 /**
  * Moves the preempted task in front of the slot_to_move_to, updates slot owner
@@ -152,12 +166,15 @@ void move_preempted_tasks(long insertion_slot, int stack_size, struct PBS_Task* 
 
     for ( i = 0; i < stack_size; i++){
         *(cur_task + i) = preempted_tasks[i];
-
-        printf(KERN_DEBUG "[PBS_move_preempted_tasks]%ld: Moved (%ld,%ld) in place of (%ld,%ld)\n", p->tick_counter,
+        if (LOG_PBS)
+            printf(KERN_DEBUG "[PBS_move_preempted_tasks]%ld: Moved (%ld,%ld) in place of (%ld,%ld)\n", p->tick_counter,
                cur_task->task_id, cur_task->process_id, task_before.task_id, task_before.process_id);
     }
 
 }
+
+EXPORT_SYMBOL(move_preempted_tasks);
+
 /**
  * Checks what tasks have to be moved by the preemption, are stored in tasks-to_move
  * @param p current plan
@@ -186,6 +203,8 @@ int get_stack_size_preempted_tasks(struct PBS_Task *tasks_to_move, struct PBS_Pl
     return index + 1;
 }
 
+EXPORT_SYMBOL(get_stack_size_preempted_tasks);
+
 /**
  *  Moves tasks for to enable preemption
  * @param insertion_slot
@@ -199,6 +218,9 @@ void move_other_tasks_forward(long insertion_slot, long stack_size, struct PBS_P
         p->tasks[i] = p->tasks[i + stack_size];
     }
 }
+
+EXPORT_SYMBOL(move_other_tasks_forward);
+
 /**
  * Simulates a rescheduling from the scheduling component
  * @param p
@@ -231,8 +253,45 @@ void reschedule(struct PBS_Plan* p, short signal){
         }
         cur_task++;
     }
-    printf(KERN_DEBUG "[PBS_reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
+    if (LOG_PBS)
+        printf(KERN_DEBUG "[PBS_reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
     }
+
+EXPORT_SYMBOL(reschedule);
+
+
+/**
+ *
+ * @param sig
+ */
+void add_signal(struct PredictionFailureSignal sig){
+
+    cur_sig_buffer_position++;
+    if (cur_sig_buffer_position == 100)
+        cur_sig_buffer_position = 0;
+    lastSignals[cur_sig_buffer_position] = sig;
+}
+
+EXPORT_SYMBOL(add_signal);
+/**
+ * Returns latest signals in lastSignals
+ * @param pick_signal Index of latest signal, 0 -> latest signal, 1 2nd latest signal,...
+ * @return
+ */
+struct PredictionFailureSignal* get_pbs_signal(int pick_signal){
+    assert(pick_signal >= 0 && pick_signal < SIZE_SIG_BUFFER);
+    int target_index =  cur_sig_buffer_position - pick_signal;
+
+    // no warp around happening
+    if (target_index >= 0)
+        return &lastSignals[target_index];
+    // wrap around happens
+    target_index = SIZE_SIG_BUFFER + target_index;
+    return &lastSignals[target_index];
+}
+
+EXPORT_SYMBOL(get_pbs_signal);
+
 
 // --- debug ---
 void get_all_ids_from_plan(long list_ids[400], struct PBS_Plan* p){
@@ -245,6 +304,7 @@ void get_all_ids_from_plan(long list_ids[400], struct PBS_Plan* p){
     }
     list_ids[counter] = LONG_MAX;
 }
+
 
 short same_ids(long first[400], long second[400]){
     int i, j;
@@ -276,39 +336,12 @@ short order_is_kept(struct PBS_Plan* p){
         if(cur_task->task_id == -1)
             continue;
         if(cur_task->task_id < last_id[cur_task->process_id]) {
-            printf(KERN_INFO "[PBS_order_is_kept]%ld: %ld is before %ld\n", p->tick_counter, p->cur_task->task_id, last_id[cur_task->process_id]);
+            if (LOG_PBS)
+                printf(KERN_INFO "[PBS_order_is_kept]%ld: %ld is before %ld\n", p->tick_counter, p->cur_task->task_id, last_id[cur_task->process_id]);
             return 0;
         } else {
             last_id[cur_task->process_id] = cur_task->task_id;
         }
     }
     return 1;
-}
-
-/**
- *
- * @param sig
- */
-void add_signal(struct PredictionFailureSignal sig){
-
-    cur_sig_buffer_position++;
-    if (cur_sig_buffer_position == 100)
-        cur_sig_buffer_position = 0;
-    lastSignals[cur_sig_buffer_position] = sig;
-}
-/**
- * Returns latest signals in lastSignals
- * @param pick_signal Index of latest signal, 0 -> latest signal, 1 2nd latest signal,...
- * @return
- */
-struct PredictionFailureSignal* get_pbs_signal(int pick_signal){
-    assert(pick_signal >= 0 && pick_signal < SIZE_SIG_BUFFER);
-    int target_index =  cur_sig_buffer_position - pick_signal;
-
-    // no warp around happening
-    if (target_index >= 0)
-        return &lastSignals[target_index];
-    // wrap around happens
-    target_index = SIZE_SIG_BUFFER + target_index;
-    return &lastSignals[target_index];
 }
