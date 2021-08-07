@@ -5,7 +5,7 @@
 #include "kernel_dummies.h"
 
 #include "pmu_interface.h"
-#include "prediction_failure_config.h"
+#include "config.h"
 
 long get_retired_instructions(){
     return INS_PER_TICK;

@@ -1,7 +1,7 @@
 #ifndef LEVEL2_PLAN_H
 #define LEVEL2_PLAN_H
 
-#include "prediction_failure_config.h"
+#include "config.h"
 
 #define ON_PLAN 0
 #define SIGNALED 1
@@ -20,6 +20,8 @@ void update_cur_task_process(struct PBS_Plan*);
 struct PBS_Task* find_task_with_task_id(struct PBS_Plan* , long);
 void update_node_lateness(long , struct PBS_Plan* );
 void change_plan_state(struct PBS_Plan*, short);
+void move_task_in_plan(int, struct PBS_Task*, struct PBS_Plan*);
+int number_processes_in_plan(struct PBS_Plan*);
 
 // --- for testing ---
 void fill_empty_test_plan(struct PBS_Plan* p);

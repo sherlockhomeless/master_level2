@@ -191,8 +191,8 @@ void test_plan_parsing(struct PBS_Plan* plan){
     // --- parse plan ---
     parse_plan(plan_string, plan);
 
-    // print whole parsed plan
     struct PBS_Task* t_ptr = plan->tasks;
+    assert(number_processes_in_plan(plan) == MAX_NUMBER_PROCESSES);
 }
 
 /**
@@ -236,6 +236,7 @@ void run_unit_tests(){
     test_move_others();
     test_task_moving();
     test_insert_preempted_tasks();
+    test_handle_unallocated();
 }
 
 void test_task_moving(){

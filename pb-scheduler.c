@@ -10,14 +10,19 @@
 #include "pmu_interface.h"
 #include "plan.h"
 #include "process.h"
+#include "task.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
-#include "prediction_failure_config.h"
+#include "config.h"
 
 void schedule_task_finished(struct PBS_Plan*);
 void schedule_timer_tick(struct PBS_Plan*);
 void switch_task(struct PBS_Plan*);
 void handle_free_slot(struct PBS_Plan*);
+void handle_unallocated_slot(struct PBS_Plan* p);
+struct PBS_Process* find_latest_process(struct PBS_Plan* p);
+void idle(struct PBS_Plan*);
+
 struct PBS_Plan pbs_plan = {0};
 
 struct PBS_Plan* pbs_plan_ptr = &pbs_plan;
@@ -91,7 +96,8 @@ void schedule_task_finished(struct PBS_Plan *p){
     p->cur_process->instructions_retired -= instruction_surplus;
     p->cur_task->instructions_retired_slot = p->cur_task->instructions_real;
 
-    p->stress--;
+    if (p->stress != 0)
+        p->stress--;
     switch_task(p);
 }
 
@@ -127,7 +133,8 @@ void schedule_timer_tick(struct PBS_Plan *p){
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_schedule_timer_tick]%ld: (%ld,%ld) retired instructions %ld\n",
            p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
-    p->stress--;
+    if (p->stress)
+        p->stress--;
 }
 
 EXPORT_SYMBOL(schedule_timer_tick);
@@ -142,10 +149,10 @@ void switch_task(struct PBS_Plan* p){
     p->tasks_finished++;
     p->index_cur_task++;
     p->cur_task++;
-    update_cur_task_process(p);
     if (p->cur_task->task_id == -1){
         handle_free_slot(p);
     }
+    update_cur_task_process(p);
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_switch_task]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
 }
@@ -189,3 +196,35 @@ void handle_free_slot(struct PBS_Plan* p){
 }
 
 EXPORT_SYMBOL(handle_free_slot);
+
+// TODO: the following handle_unallocated_slot is the function that hsould be used; needs to be plugged in
+/**
+ * Is called if pbs encounters an unallocated time slot as next task to be executed
+ * cur_task already pointing at free_slot
+ * @param p the current plan
+ */
+void handle_unallocated_slot(struct PBS_Plan* p){
+    struct PBS_Task cur_task;
+    struct PBS_Task* next_task_to_run = NULL;
+    char found_pids [MAX_NUMBER_PROCESSES] = {0};
+    int found_processes = 0;
+    int i = 0;
+    long max_lateness = 0;
+
+    while (found_processes < p->num_processes){
+        cur_task = p->tasks[i];
+        if (found_pids[cur_task.process_id] == 1)
+            continue;
+        else {
+            found_pids[cur_task.process_id] = 1;
+        }
+        if (cur_task.was_preempted > 0 && p->cur_process->lateness > max_lateness){
+            next_task_to_run = &cur_task;
+        }
+        i++;
+    }
+
+    move_task_in_plan(0, next_task_to_run, p);
+    int lateness_order = 0;
+    clear_preemption(next_task_to_run);
+}

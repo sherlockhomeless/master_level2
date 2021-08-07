@@ -9,7 +9,7 @@
 #include "pbs_entities.h"
 #include "plan.h"
 #include "threshold_checking.h"
-#include "prediction_failure_config.h"
+#include "config.h"
 
 
 long calculate_t1(struct PBS_Task*);
@@ -113,8 +113,9 @@ EXPORT_SYMBOL(check_tm2_task);
 short check_t2_process(struct PBS_Plan* p) {
     if (!T2_PROCESS_ENABLED)
         return OK;
-    // TODO: HIER WEITER
-    return OK;
+    else  {
+// TODO!!
+    }
 }
 
 EXPORT_SYMBOL(check_t2_process);

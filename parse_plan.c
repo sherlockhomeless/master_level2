@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "plan.h"
-#include "prediction_failure_config.h"
+#include "config.h"
 #include "pbs_entities.h"
 
 
@@ -125,6 +125,7 @@ char* parse_next_task(struct PBS_Plan* plan, int index, char* cur_position){
     cur_t.instructions_retired_task = 0;
     cur_t.state = PLAN_TASK_WAITING;
     cur_t.slot_owner = SHARES_NO_SLOT;
+    cur_t.was_preempted = 0;
 
     cur_t.process_id = parse_next_number(&cur_position);
     plan->processes[cur_t.process_id].num_tasks_remaining++;

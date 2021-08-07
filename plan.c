@@ -6,7 +6,7 @@
 #include "plan.h"
 #include "task.h"
 #include "process.h"
-#include "prediction_failure_config.h"
+#include "config.h"
 // --- Task States ---
 #define ON_TIME 0
 #define TURNS_LATE 1
@@ -123,3 +123,17 @@ void fill_empty_test_plan(struct PBS_Plan* p){
     p->finished_tasks = &p->tasks[0];
     p->cur_process = &p->processes[p->cur_task->process_id];
 }
+
+
+// here because of p->num_processes might not be initialized warning
+int number_processes_in_plan(struct PBS_Plan* p){
+    int num = 0;
+    struct PBS_Process* cur_process = p->processes;
+    while (cur_process->process_id != -1){
+        cur_process++;
+        num++;
+    }
+    return num;
+}
+
+EXPORT_SYMBOL(number_processes_in_plan);

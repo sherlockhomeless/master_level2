@@ -16,11 +16,11 @@
 #define T2_TASK_ENABLED 1
 #define TM2_TASK_ENABLED 1
 
-#define T2_PROCESS_ENABLED 0
-#define TM2_PROCESS_ENABLED 0
+#define T2_PROCESS_ENABLED 1
+#define TM2_PROCESS_ENABLED 1
 
-#define T2_NODE_ENABLED 0
-#define TM2_NODE_ENABLED 0
+#define T2_NODE_ENABLED 1
+#define TM2_NODE_ENABLED 1
 
 short check_t1(struct PBS_Plan*);
 short check_t2_task( struct PBS_Plan *p);
