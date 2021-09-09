@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "pbs_entities.h"
 #include "userland_only_helper.h"
 #include "plan.h"
 #include "pb-scheduler.h"
@@ -36,6 +37,7 @@ void test_find_slot_to_move_to();
 void test_move_others();
 void test_insert_preempted_tasks(); //todo: imp
 void test_task_moving();
+void test_handle_unallocated();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -44,7 +46,6 @@ struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
 int main(){
     run_unit_tests();
     return test_run();
-
 }
 
 int test_run(){
@@ -66,10 +67,10 @@ int test_run(){
     }
 
     for ( i = 0; i < 3; i++){
-        sig = get_pbs_signal(i);
+      /*  sig = get_pbs_signal(i);
         //FIXME: Signals are trash
         printf("signal: tick=%ld type=%d, task=%ld, process=%ld\n",
-               sig->tick, sig->type_signal, sig->task_id, sig->process_id);
+               sig->tick, sig->type_signal, sig->task_id, sig->process_id);*/
     }
     return 0;
 }
@@ -117,7 +118,7 @@ void check_run_task_tm2_early_time(struct PBS_Plan *p){
     //todo: implement
     struct PBS_Task* t_2 = p->cur_task;
     assert(p->tasks_finished == 2);
-    p->cur_task->instructions_real = ((p->cur_task->instructions_planned * (CAP_LATENESS/10)/100) - 13430718);
+    p->cur_task->instructions_real = ((p->cur_task->instructions_planned * (T2_SIGMA / 10) / 100) - 13430718);
     assert(p->cur_task->instructions_real < p->cur_task->instructions_planned);
     while (t_2->state != PLAN_TASK_FINISHED){
         assert(p->cur_task->task_id == 2);
@@ -237,6 +238,7 @@ void run_unit_tests(){
     test_task_moving();
     test_insert_preempted_tasks();
     test_handle_unallocated();
+
 }
 
 void test_task_moving(){
@@ -312,4 +314,14 @@ void test_insert_preempted_tasks() {
     assert(tasks[3].slot_owner == 4);
     assert(tasks[4].task_id == 4);
     assert(tasks[2].task_id == 2);
+}
+
+void test_handle_unallocated(){
+    int i;
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
+    struct PBS_Task* tasks = &p.tasks[0];
+
+
+
 }

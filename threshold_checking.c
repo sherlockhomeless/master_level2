@@ -64,7 +64,7 @@ long calculate_t2_task(struct PBS_Plan *p) {
     long t2_task, t2_task_min, t2_task_relative, t1;
     t1 = calculate_t1(task);
     t2_task_min = (long) (t1 + T2_SPACER);
-    t2_task_relative = (long) (task->instructions_planned * CAP_LATENESS);
+    t2_task_relative = (long) (task->instructions_planned * T2_SIGMA);
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_calculate_t2_task] task %ld: instructions_planned=%ld, t2_task_min=%ld, t2_task_relative=%ld\n",
                task->task_id, task->instructions_planned, t2_task_min, t2_task_relative);
@@ -96,7 +96,7 @@ EXPORT_SYMBOL(check_t2_task);
 short check_tm2_task(struct PBS_Plan* p){
     struct PBS_Task* task = p->cur_task;
     long plan_length = task->instructions_planned;
-    long tm2_task = (plan_length * CAP_LATENESS/10) / 100;
+    long tm2_task = (plan_length * T2_SIGMA / 10) / 100;
     if (!TM2_TASK_ENABLED) {
         return OK;
     }

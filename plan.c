@@ -7,6 +7,7 @@
 #include "task.h"
 #include "process.h"
 #include "config.h"
+
 // --- Task States ---
 #define ON_TIME 0
 #define TURNS_LATE 1
@@ -30,7 +31,6 @@ short does_task_turn_late(long instructions_to_run, struct PBS_Task* task){
     else
         return ON_TIME;
 }
-
 EXPORT_SYMBOL(does_task_turn_late);
 
 /**

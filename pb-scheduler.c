@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "pbs_entities.h"
 #include "kernel_dummies.h"
 #include "pb-scheduler.h"
 #include "pmu_interface.h"
@@ -207,11 +208,11 @@ void handle_unallocated_slot(struct PBS_Plan* p){
     struct PBS_Task cur_task;
     struct PBS_Task* next_task_to_run = NULL;
     char found_pids [MAX_NUMBER_PROCESSES] = {0};
-    int found_processes = 0;
+    int cur_process = 0;
     int i = 0;
     long max_lateness = 0;
 
-    while (found_processes < p->num_processes){
+    while (cur_process < p->num_processes){
         cur_task = p->tasks[i];
         if (found_pids[cur_task.process_id] == 1)
             continue;
@@ -224,6 +225,23 @@ void handle_unallocated_slot(struct PBS_Plan* p){
         i++;
     }
 
+/*    struct PBS_Task* handle_unallocated_slot(struct PBS_Plan* p){
+        struct PBS_Task* fill_task = NULL;
+        next_tasks_all_processes = sort_processes_by_lateness(next_tasks_all_processes);
+        struct PBS_Task* next_tasks_all_processes = get_next_tasks_for_processes(plan);
+        while (fill_task == NULL && next_tasks_all_processes->task_id != -1){
+            if (next_tasks_all_processes->was_preempted){
+                fill_task = next_tasks_all_processes;
+                break;
+            } else {
+                next_tasks_all_processes++;
+            }
+        }
+        if (fill_task == NULL){
+            idle();
+        } else {
+            return fill_task;
+        }*/
     move_task_in_plan(0, next_task_to_run, p);
     int lateness_order = 0;
     clear_preemption(next_task_to_run);
