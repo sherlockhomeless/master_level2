@@ -205,44 +205,30 @@ EXPORT_SYMBOL(handle_free_slot);
  * @param p the current plan
  */
 void handle_unallocated_slot(struct PBS_Plan* p){
-    struct PBS_Task cur_task;
-    struct PBS_Task* next_task_to_run = NULL;
-    char found_pids [MAX_NUMBER_PROCESSES] = {0};
-    int cur_process = 0;
     int i = 0;
-    long max_lateness = 0;
+    long found_all_processes = 0;
+    struct PBS_Task *cur_task = NULL;
+    long cur_process_id;
+    struct PBS_Task* next_task_to_run = NULL;
+    struct PBS_Task next_tasks_each_process [MAX_NUMBER_PROCESSES] = {0};
+    long max_lateness_process [MAX_NUMBER_PROCESSES] = {0};
 
-    while (cur_process < p->num_processes){
-        cur_task = p->tasks[i];
-        if (found_pids[cur_task.process_id] == 1)
-            continue;
-        else {
-            found_pids[cur_task.process_id] = 1;
-        }
-        if (cur_task.was_preempted > 0 && p->cur_process->lateness > max_lateness){
-            next_task_to_run = &cur_task;
+
+    // finds the next task for each process
+    while (cur_task->task_id != -2 ||  found_all_processes == MAX_NUMBER_PROCESSES){
+        cur_task = p->tasks+i;
+
+        if (cur_process_id == -1) continue;
+        cur_process_id = cur_task->process_id;
+        if (next_tasks_each_process[cur_process_id].instructions_planned == 0){
+            next_tasks_each_process[cur_process_id] = *cur_task;
+            found_all_processes++;
         }
         i++;
     }
 
-/*    struct PBS_Task* handle_unallocated_slot(struct PBS_Plan* p){
-        struct PBS_Task* fill_task = NULL;
-        next_tasks_all_processes = sort_processes_by_lateness(next_tasks_all_processes);
-        struct PBS_Task* next_tasks_all_processes = get_next_tasks_for_processes(plan);
-        while (fill_task == NULL && next_tasks_all_processes->task_id != -1){
-            if (next_tasks_all_processes->was_preempted){
-                fill_task = next_tasks_all_processes;
-                break;
-            } else {
-                next_tasks_all_processes++;
-            }
-        }
-        if (fill_task == NULL){
-            idle();
-        } else {
-            return fill_task;
-        }*/
+    // TODO: find latest process with preempted task
+    // TODO: Insert task into idle time slot
     move_task_in_plan(0, next_task_to_run, p);
-    int lateness_order = 0;
     clear_preemption(next_task_to_run);
 }
