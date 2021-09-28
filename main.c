@@ -238,7 +238,6 @@ void run_unit_tests(){
     test_task_moving();
     test_insert_preempted_tasks();
     test_handle_unallocated();
-
 }
 
 void test_task_moving(){
@@ -323,5 +322,32 @@ void test_handle_unallocated(){
     struct PBS_Task* tasks = &p.tasks[0];
 
 
+    // unallocated slot
+    tasks->process_id = -1;
+    tasks->task_id = -1;
+    tasks->instructions_planned = 100;
+    // first task: pid 0, preempted 1, p-lateness 50
+    tasks++;
+    tasks->was_preempted = 1;
+    tasks->process_id = 0;
+    p.processes[0].lateness = 50;
+
+    // second task: pid 1, preempted 1, p-lateness 100
+    tasks++;
+    tasks->was_preempted = 1;
+    tasks->process_id = 1;
+    p.processes[1].lateness = 100;
+
+    // thirst task: pid 2, preempted 0, p-lateness 200
+    tasks++;
+    tasks->was_preempted = 0;
+    tasks->process_id = 2;
+    p.processes[2].lateness = 200;
+
+    handle_unallocated_slot(&p);
+
+    assert(p.tasks[0].process_id == 1);
+    assert(p.tasks[1].process_id == 0);
+    assert(p.tasks[2].process_id == 2);
 
 }

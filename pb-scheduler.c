@@ -24,6 +24,10 @@ void handle_unallocated_slot(struct PBS_Plan* p);
 struct PBS_Process* find_latest_process(struct PBS_Plan* p);
 void idle(struct PBS_Plan*);
 
+void
+find_next_task_for_all_processes(const struct PBS_Plan *p, int i, long found_all_processes, struct PBS_Task *cur_task,
+                                 struct PBS_Task *next_tasks_each_process);
+
 struct PBS_Plan pbs_plan = {0};
 
 struct PBS_Plan* pbs_plan_ptr = &pbs_plan;
@@ -208,12 +212,20 @@ void handle_unallocated_slot(struct PBS_Plan* p){
     int i = 0;
     long found_all_processes = 0;
     struct PBS_Task *cur_task = NULL;
-    long cur_process_id;
     struct PBS_Task* next_task_to_run = NULL;
     struct PBS_Task next_tasks_each_process [MAX_NUMBER_PROCESSES] = {0};
     long max_lateness_process [MAX_NUMBER_PROCESSES] = {0};
 
+    find_next_task_for_all_processes(p, i, found_all_processes, cur_task, next_tasks_each_process);
 
+
+    move_task_in_plan(0, next_task_to_run, p);
+    clear_preemption(next_task_to_run);
+}
+
+void find_next_task_for_all_processes(const struct PBS_Plan *p, int i, long found_all_processes, struct PBS_Task *cur_task,
+                                 struct PBS_Task *next_tasks_each_process) {
+    long cur_process_id = -2;
     // finds the next task for each process
     while (cur_task->task_id != -2 ||  found_all_processes == MAX_NUMBER_PROCESSES){
         cur_task = p->tasks+i;
@@ -226,9 +238,4 @@ void handle_unallocated_slot(struct PBS_Plan* p){
         }
         i++;
     }
-
-    // TODO: find latest process with preempted task
-    // TODO: Insert task into idle time slot
-    move_task_in_plan(0, next_task_to_run, p);
-    clear_preemption(next_task_to_run);
 }
