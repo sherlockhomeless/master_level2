@@ -135,5 +135,15 @@ int number_processes_in_plan(struct PBS_Plan* p){
     }
     return num;
 }
-
 EXPORT_SYMBOL(number_processes_in_plan);
+
+/**
+ * Moves task_to_move from its current place to p->tasks[insertion_index]
+ * All other tasks are shifted forward
+ * @param insertion_index
+ * @param task_to_move
+ * @param p
+ */
+void move_task_in_plan(int insertion_index, struct PBS_Task* task_to_move, struct PBS_Plan* p){
+
+}

@@ -8,9 +8,6 @@
 #define PLAN_FINISHED 2
 
 
-/*
- * Representation of the Plan
- */
 // --- main interface ---
 struct PBS_Plan* parse_plan(char*,struct PBS_Plan*);
 void update_retired_instructions(long instructions_retired,struct PBS_Plan *p);
@@ -20,8 +17,9 @@ void update_cur_task_process(struct PBS_Plan*);
 struct PBS_Task* find_task_with_task_id(struct PBS_Plan* , long);
 void update_node_lateness(long , struct PBS_Plan* );
 void change_plan_state(struct PBS_Plan*, short);
-void move_task_in_plan(int, struct PBS_Task*, struct PBS_Plan*);
 int number_processes_in_plan(struct PBS_Plan*);
+void move_task_in_plan(int insertion_index, struct PBS_Task* task_to_move, struct PBS_Plan* p);
+
 
 // --- for testing ---
 void fill_empty_test_plan(struct PBS_Plan* p);

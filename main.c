@@ -42,6 +42,7 @@ void test_task_moving();
 void test_handle_unallocated();
 void test_find_next_task_for_all_processes();
 void test_find_suitable_task();
+void test_move_task_in_plan();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -394,4 +395,20 @@ void test_find_next_task_for_all_processes(){
     assert(next_tasks[0].task_id == 0);
     assert(next_tasks[1].task_id == 10);
     assert(next_tasks[2].task_id == -2);
+}
+
+void test_move_task_in_plan(){
+    struct PBS_Plan p = {0};
+
+    p.tasks[0].task_id = 0;
+    p.tasks[1].task_id = 1;
+    p.tasks[2].task_id = 2;
+    p.tasks[3].task_id = 3;
+
+    move_task_in_plan(3, &p.tasks[0], &p);
+
+    assert(p.tasks[0].task_id == 1);
+    assert(p.tasks[1].task_id == 2);
+    assert(p.tasks[2].task_id == 3);
+    assert(p.tasks[3].task_id == 0);
 }
