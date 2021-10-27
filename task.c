@@ -25,7 +25,6 @@ void pbs_update_retired_instructions_task(long instructions, struct PBS_Task*tas
     // task has not finished OR is late
     task->lateness = 0;
 }
-
 EXPORT_SYMBOL(pbs_update_retired_instructions_task);
 
 void change_task_state(struct PBS_Task *t, short state) {
@@ -35,6 +34,11 @@ void change_task_state(struct PBS_Task *t, short state) {
         printf(KERN_INFO "[change_task_state] changed task %ld from %d to %d\n", t->task_id, state_before, state);
 }
 EXPORT_SYMBOL(change_task_state);
+
+void clear_preemption(struct PBS_Task *t){
+    t->was_preempted = 0;
+    t->slot_owner = t->task_id;
+}
 
 /**
  * Creates a Task with the given parameter
@@ -54,3 +58,4 @@ struct PBS_Task create_task(long task_id, long process_id, long instructions_pla
     new_task.slot_owner = task_id;
     return new_task;
 }
+EXPORT_SYMBOL(create_task);

@@ -89,9 +89,9 @@ char* parse_meta(char* plan_s, char* cur_position, struct PBS_Plan* p){
         }
     }
     // setup process for unallocated time slots
-    p->processes[MAX_NUMBER_PROCESSES-1].process_id = -1;
-    p->processes[MAX_NUMBER_PROCESSES-1].buffer = -1;
-    p->processes[MAX_NUMBER_PROCESSES-1].length_plan = 0;
+    p->processes[p->num_processes].process_id = -2;
+    p->processes[p->num_processes].buffer = -2;
+    p->processes[p->num_processes].length_plan = 0;
     return cur_position;
 }
 
@@ -128,12 +128,16 @@ char* parse_next_task(struct PBS_Plan* plan, int index, char* cur_position){
     cur_t.was_preempted = 0;
 
     cur_t.process_id = parse_next_number(&cur_position);
-    plan->processes[cur_t.process_id].num_tasks_remaining++;
+    if (cur_t.process_id != -1){
+        plan->processes[cur_t.process_id].num_tasks_remaining++;
+    }
     cur_position++;
     cur_t.task_id = parse_next_number(&cur_position);
     cur_position++;
     cur_t.instructions_planned = parse_next_number(&cur_position);
-    plan->processes[cur_t.process_id].length_plan += cur_t.instructions_planned;
+    if (cur_t.process_id != -1){
+        plan->processes[cur_t.process_id].length_plan += cur_t.instructions_planned;
+    }
     cur_position++;
     cur_t.instructions_real = parse_next_number(&cur_position);
     cur_position++;

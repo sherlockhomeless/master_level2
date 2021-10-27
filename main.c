@@ -19,6 +19,7 @@
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
 
+
 const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
 const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
 
@@ -198,7 +199,7 @@ void test_plan_parsing(struct PBS_Plan* plan){
     parse_plan(plan_string, plan);
 
     struct PBS_Task* t_ptr = plan->tasks;
-    assert(number_processes_in_plan(plan) == MAX_NUMBER_PROCESSES);
+    assert(number_processes_in_plan(plan) == 3);
 }
 
 /**
@@ -243,6 +244,9 @@ void run_unit_tests(){
     test_task_moving();
     test_insert_preempted_tasks();
     test_handle_unallocated();
+    test_find_next_task_for_all_processes();
+    test_find_suitable_task();
+    test_move_task_in_plan();
 }
 
 void test_task_moving(){
@@ -271,6 +275,8 @@ void test_find_slot_to_move_to(){
 
     index = find_slot_to_move_to(0, &p );
     assert(index == 3);
+
+    printf("passed test_find_slot_to_move_to()\n");
 }
 
 void test_move_others(){
@@ -297,6 +303,8 @@ void test_move_others(){
     move_other_tasks_forward(5, 2, &p);
     assert(tasks[0].task_id == 2);
     assert(tasks[1].task_id == 3);
+
+    printf("passed test_move_others()\n");
 }
 
 void test_insert_preempted_tasks() {
@@ -318,6 +326,8 @@ void test_insert_preempted_tasks() {
     assert(tasks[3].slot_owner == 4);
     assert(tasks[4].task_id == 4);
     assert(tasks[2].task_id == 2);
+
+    printf("passed test_insert_preempted_tasks()\n");
 }
 
 void test_handle_unallocated(){
@@ -355,6 +365,7 @@ void test_handle_unallocated(){
     assert(p.tasks[1].process_id == 0);
     assert(p.tasks[2].process_id == 2);
 
+    printf("passed test_handle_unallocated()\n");
 }
 
 void test_find_suitable_task(){
@@ -378,6 +389,7 @@ void test_find_suitable_task(){
     next_task = find_substitution_task(next_tasks);
 
     assert(next_task->task_id == 1);
+    printf("passed test_find_suitable_task()\n");
 }
 
 void test_find_next_task_for_all_processes(){
@@ -395,6 +407,8 @@ void test_find_next_task_for_all_processes(){
     assert(next_tasks[0].task_id == 0);
     assert(next_tasks[1].task_id == 10);
     assert(next_tasks[2].task_id == -2);
+
+    printf("passed test_find_next_task_for_all_processes()\n");
 }
 
 void test_move_task_in_plan(){
@@ -411,4 +425,7 @@ void test_move_task_in_plan(){
     assert(p.tasks[1].task_id == 2);
     assert(p.tasks[2].task_id == 3);
     assert(p.tasks[3].task_id == 0);
+
+    printf("passed test_move_task_in_plan()\n");
+
 }

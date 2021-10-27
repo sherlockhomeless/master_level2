@@ -129,7 +129,7 @@ void fill_empty_test_plan(struct PBS_Plan* p){
 int number_processes_in_plan(struct PBS_Plan* p){
     int num = 0;
     struct PBS_Process* cur_process = p->processes;
-    while (cur_process->process_id != -1){
+    while (cur_process->process_id != -2){
         cur_process++;
         num++;
     }
