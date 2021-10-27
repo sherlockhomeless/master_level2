@@ -15,3 +15,4 @@ void start_run(struct PBS_Plan *p);
 
 // --- for unit testing ---
 void handle_unallocated_slot(struct PBS_Plan*);
+struct PBS_Task* find_substitution_task(struct PBS_Task[MAX_NUMBER_PROCESSES]);

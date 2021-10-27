@@ -35,3 +35,22 @@ void change_task_state(struct PBS_Task *t, short state) {
         printf(KERN_INFO "[change_task_state] changed task %ld from %d to %d\n", t->task_id, state_before, state);
 }
 EXPORT_SYMBOL(change_task_state);
+
+/**
+ * Creates a Task with the given parameter
+ * @param task_id
+ * @param process_id
+ * @param instructions_planned
+ * @param instructions_real
+ * @return
+ */
+struct PBS_Task create_task(long task_id, long process_id, long instructions_planned, long instructions_real){
+    struct PBS_Task new_task = {0};
+    new_task.task_id = task_id;
+    new_task.process_id = process_id;
+    new_task.instructions_planned = instructions_planned;
+    new_task.instructions_real = instructions_real;
+
+    new_task.slot_owner = task_id;
+    return new_task;
+}

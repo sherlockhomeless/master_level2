@@ -34,8 +34,7 @@
 };
 
 // PROCESS
-
- struct PBS_Process {
+struct PBS_Process {
     long process_id; // classic PID
     long num_tasks_remaining; //todo: update
     long buffer;

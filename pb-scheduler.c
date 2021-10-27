@@ -25,8 +25,7 @@ struct PBS_Process* find_latest_process(struct PBS_Plan* p);
 void idle(struct PBS_Plan*);
 
 void
-find_next_task_for_all_processes(const struct PBS_Plan *p, int i, long found_all_processes, struct PBS_Task *cur_task,
-                                 struct PBS_Task *next_tasks_each_process);
+find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES]);
 
 struct PBS_Plan pbs_plan = {0};
 
@@ -202,38 +201,53 @@ void handle_free_slot(struct PBS_Plan* p){
 
 EXPORT_SYMBOL(handle_free_slot);
 
-// TODO: the following handle_unallocated_slot is the function that hsould be used; needs to be plugged in
+// TODO: the following handle_unallocated_slot is the function that should be used; needs to be plugged in
 /**
  * Is called if pbs encounters an unallocated time slot as next task to be executed
  * cur_task already pointing at free_slot
  * @param p the current plan
  */
 void handle_unallocated_slot(struct PBS_Plan* p){
-    int i = 0;
     long found_all_processes = 0;
     struct PBS_Task *cur_task = NULL;
-    struct PBS_Task* next_task_to_run = NULL;
-    struct PBS_Task next_tasks_each_process [MAX_NUMBER_PROCESSES] = {0};
+    struct PBS_Task* next_task_to_run;
+    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
     long max_lateness_process [MAX_NUMBER_PROCESSES] = {0};
 
-    find_next_task_for_all_processes(p, i, found_all_processes, cur_task, next_tasks_each_process);
-
+    // stores upcoming task for each process in next_task_each_process
+    find_next_task_for_all_processes(p, next_tasks);
+    // set next_task_to_run to task that is preempted & most late
+    next_task_to_run = find_substitution_task(next_tasks);
 
     move_task_in_plan(0, next_task_to_run, p);
     clear_preemption(next_task_to_run);
 }
 
-void find_next_task_for_all_processes(const struct PBS_Plan *p, int i, long found_all_processes, struct PBS_Task *cur_task,
-                                 struct PBS_Task *next_tasks_each_process) {
+/**
+ * Searches all upcoming tasks for suitable canidate to run in unallocated time slot
+ * @param next_tasks All upcoming tasks of active processes
+ * @return Pointer to task that needs to be run next
+ */
+struct PBS_Task* find_substitution_task(struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES]){
+
+}
+
+void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES]) {
+    long found_all_processes = 0;
     long cur_process_id = -2;
+    struct PBS_Task cur_task;
+    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
+    int i = 0;
+    cur_task = p->tasks[i];
+
     // finds the next task for each process
-    while (cur_task->task_id != -2 ||  found_all_processes == MAX_NUMBER_PROCESSES){
-        cur_task = p->tasks+i;
+    while (cur_task.task_id != -2 ||  found_all_processes == MAX_NUMBER_PROCESSES){
+        cur_task = p->tasks[i];
 
         if (cur_process_id == -1) continue;
-        cur_process_id = cur_task->process_id;
-        if (next_tasks_each_process[cur_process_id].instructions_planned == 0){
-            next_tasks_each_process[cur_process_id] = *cur_task;
+        cur_process_id = cur_task.process_id;
+        if (next_tasks[cur_process_id].instructions_planned == 0){
+            next_tasks[cur_process_id] = cur_task;
             found_all_processes++;
         }
         i++;

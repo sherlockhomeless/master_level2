@@ -14,6 +14,7 @@
 #include "pbs_entities.h"
 #include "userland_only_helper.h"
 #include "plan.h"
+#include "task.h"
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
@@ -23,6 +24,7 @@ const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy
 
 void read_plan(FILE*, char* , long);
 long get_file_size(FILE*);
+
 void test_plan_parsing(struct PBS_Plan*);
 void check_thresholds(struct PBS_Plan*);
 void check_run_task_on_time(struct PBS_Plan *plan);
@@ -35,7 +37,7 @@ void check_signal_t2_task(struct PBS_Plan *plan);
 void run_unit_tests();
 void test_find_slot_to_move_to();
 void test_move_others();
-void test_insert_preempted_tasks(); //todo: imp
+void test_insert_preempted_tasks();
 void test_task_moving();
 void test_handle_unallocated();
 int test_run();
@@ -350,4 +352,27 @@ void test_handle_unallocated(){
     assert(p.tasks[1].process_id == 0);
     assert(p.tasks[2].process_id == 2);
 
+}
+
+void test_find_suitable_task(){
+    struct PBS_Plan p = {0};
+    struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES];
+    struct PBS_Task *next_task;
+    p.tasks[0] = create_task(0, 0, 1000, 2000);
+    p.tasks[0].was_preempted = 1;
+    p.processes[0].lateness = -100;
+
+    p.tasks[1] = create_task(1, 1, 1000, 2000);
+    p.tasks[1].was_preempted = 2;
+    p.processes[1].lateness = -200;
+
+    p.tasks[2] = create_task(2,2,200, 200);
+    p.tasks[2].was_preempted = 0;
+    p.processes[2].lateness = -2000;
+
+    p.tasks[3].task_id = -2;
+
+    next_task = find_substitution_task(next_tasks);
+
+    assert(next_task->task_id == 1);
 }
