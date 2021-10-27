@@ -24,8 +24,6 @@ void handle_unallocated_slot(struct PBS_Plan* p);
 struct PBS_Process* find_latest_process(struct PBS_Plan* p);
 void idle(struct PBS_Plan*);
 
-void
-find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES]);
 
 struct PBS_Plan pbs_plan = {0};
 
@@ -236,7 +234,6 @@ void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task 
     long found_all_processes = 0;
     long cur_process_id = -2;
     struct PBS_Task cur_task;
-    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
     int i = 0;
     cur_task = p->tasks[i];
 

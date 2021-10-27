@@ -40,6 +40,8 @@ void test_move_others();
 void test_insert_preempted_tasks();
 void test_task_moving();
 void test_handle_unallocated();
+void test_find_next_task_for_all_processes();
+void test_find_suitable_task();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -375,4 +377,21 @@ void test_find_suitable_task(){
     next_task = find_substitution_task(next_tasks);
 
     assert(next_task->task_id == 1);
+}
+
+void test_find_next_task_for_all_processes(){
+    struct PBS_Plan p = {0};
+    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
+
+    p.tasks[0] = create_task(0,0,0,0);
+    p.tasks[1] = create_task(1,0,0,0);
+
+    p.tasks[5] = create_task(10,1,0,0);
+    p.tasks[100] = create_task(-2,-2,0,0);
+
+    find_next_task_for_all_processes(&p, next_tasks);
+
+    assert(next_tasks[0].task_id == 0);
+    assert(next_tasks[1].task_id == 10);
+    assert(next_tasks[2].task_id == -2);
 }
