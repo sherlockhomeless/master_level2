@@ -243,10 +243,10 @@ void run_unit_tests(){
     test_move_others();
     test_task_moving();
     test_insert_preempted_tasks();
-    test_handle_unallocated();
     test_find_next_task_for_all_processes();
     test_find_suitable_task();
     test_move_task_in_plan();
+    test_handle_unallocated();
 }
 
 void test_task_moving(){
@@ -396,10 +396,10 @@ void test_find_next_task_for_all_processes(){
     struct PBS_Plan p = {0};
     struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
 
-    p.tasks[0] = create_task(0,0,0,0);
-    p.tasks[1] = create_task(1,0,0,0);
+    p.tasks[0] = create_task(0,0,10,0);
+    p.tasks[1] = create_task(1,0,10,0);
 
-    p.tasks[5] = create_task(10,1,0,0);
+    p.tasks[5] = create_task(10,1,10,0);
     p.tasks[100] = create_task(-2,-2,0,0);
 
     find_next_task_for_all_processes(&p, next_tasks);
