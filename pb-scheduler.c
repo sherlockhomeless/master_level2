@@ -210,24 +210,57 @@ void handle_unallocated_slot(struct PBS_Plan* p){
     struct PBS_Task *cur_task = NULL;
     struct PBS_Task* next_task_to_run;
     struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES] = {0};
-    long max_lateness_process [MAX_NUMBER_PROCESSES] = {0};
 
     // stores upcoming task for each process in next_task_each_process
     find_next_task_for_all_processes(p, next_tasks);
     // set next_task_to_run to task that is preempted & most late
-    next_task_to_run = find_substitution_task(next_tasks);
+    next_task_to_run = find_substitution_task(next_tasks, NULL);
 
     move_task_in_plan(0, next_task_to_run, p);
     clear_preemption(next_task_to_run);
 }
+EXPORT_SYMBOL(handle_unallocated_slot);
 
 /**
- * Searches all upcoming tasks for suitable canidate to run in unallocated time slot
- * @param next_tasks All upcoming tasks of active processes
+ * Searches all upcoming tasks for suitable candidate to run in unallocated time slot
+ * @param next_tasks All upcoming tasks of active processes; index also determines pid; array is terminated with tid -2
  * @return Pointer to task that needs to be run next
  */
-struct PBS_Task* find_substitution_task(struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES]){
-    return NULL;
+struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[100], struct PBS_Plan *p) {
+    int i;
+    int latest_preempted_task = -1;
+    long max_lateness = 0;
+    long cur_lateness = 0;
+    struct PBS_Task* cur_task = &next_tasks[0];
+    struct PBS_Task* sub_task = NULL;
+
+
+    // filter out processes whose next task was not preempted
+    // if a task is filtered out its id will be set to -1
+    while (cur_task->task_id != -2){
+        //something is fucky with taskid
+        if (cur_task->was_preempted == 0){
+            cur_task->task_id = -1;
+        }
+        cur_task++;
+    }
+
+    // of all preempted tasks find that which process' is the latest
+    cur_task = &next_tasks[0];
+    while (cur_task->task_id != -2){
+        if (cur_task->task_id != -1){
+            cur_lateness = p->processes[cur_task->process_id].lateness;
+            if (max_lateness < cur_lateness){
+                max_lateness = cur_lateness;
+                sub_task = cur_task;
+            }
+        }
+        cur_task++;
+    }
+
+    // since next_task only contains copied values of the original task, the pointer has to refer to the original location in plan
+    if (sub_task == NULL) return sub_task;
+    else return find_task_with_task_id(p, sub_task->task_id);
 }
 
 /**

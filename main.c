@@ -5,7 +5,6 @@
  * todo: nice_to_have_
  */
 
-
  // todo: more assertsbuffer=buffer=
 #include <stdio.h>
 #include <stdlib.h>
@@ -386,9 +385,9 @@ void test_find_suitable_task(){
 
     p.tasks[3].task_id = -2;
 
-    next_task = find_substitution_task(next_tasks);
+    next_task = find_substitution_task(next_tasks, &p);
 
-    assert(next_task->task_id == 1);
+     assert(next_task->task_id == 1);
     printf("passed test_find_suitable_task()\n");
 }
 
