@@ -204,10 +204,10 @@ void test_find_suitable_task(){
 void test_move_task_in_plan(){
     struct PBS_Plan p = {0};
 
-    p.tasks[0].task_id = 0;
-    p.tasks[1].task_id = 1;
-    p.tasks[2].task_id = 2;
-    p.tasks[3].task_id = 3;
+    p.tasks[0] = create_task(0, 0, 10, 10);
+    p.tasks[1] = create_task(1, 1, 10, 10);
+    p.tasks[2] = create_task(2, 2, 10, 10);
+    p.tasks[3] = create_task(3, 3, 10, 10);
 
     move_task_in_plan(3, &p.tasks[0], &p);
 

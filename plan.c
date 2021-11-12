@@ -145,5 +145,5 @@ EXPORT_SYMBOL(number_processes_in_plan);
  * @param p
  */
 void move_task_in_plan(int insertion_index, struct PBS_Task* task_to_move, struct PBS_Plan* p){
-
+    struct PBS_Task tmp = p->tasks[insertion_index];
 }
