@@ -87,7 +87,7 @@ void update_cur_task_process(struct PBS_Plan *p) {
  * @return
  */
 struct PBS_Task* find_task_with_task_id(struct PBS_Plan* p, long task_id){
-    struct PBS_Task* cur_task = p->cur_task;
+    struct PBS_Task* cur_task = &p->tasks[0];
     while (cur_task->task_id != -2){
         if (cur_task->task_id == task_id){
             assert(cur_task != NULL);

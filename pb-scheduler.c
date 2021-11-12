@@ -222,6 +222,50 @@ void handle_unallocated_slot(struct PBS_Plan* p){
 EXPORT_SYMBOL(handle_unallocated_slot);
 
 /**
+ * Fills next_tasks with the next upcoming task according to the plan
+ * If no next task can be found, it will be set to no_task_found
+ * @param p current plan
+ * @param next_tasks empty array that is to be filled with upcoming tasks, the index represents the pid
+ */
+void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES]) {
+    const struct PBS_Task no_task_found = {.task_id = -1, .process_id=-1, .instructions_planned = -1};
+    long cur_process_id = -3;
+    long cur_task_id = -3;
+    struct PBS_Task cur_task;
+    int i = 0;
+    struct PBS_Task del;
+    cur_task = p->tasks[i];
+
+    // mark all tasks as not found
+    for (i = 0; i < MAX_NUMBER_PROCESSES; i++){
+        if (next_tasks[i].process_id == -2) {
+            break;
+        }
+        next_tasks[i] = no_task_found;
+    }
+
+    i = 0;
+    // finds the next task for each process
+    while (cur_task_id != -2){
+        cur_task = p->tasks[i];
+        cur_process_id = cur_task.process_id;
+        cur_task_id = cur_task.task_id;
+
+        del = next_tasks[cur_process_id];
+
+        // continue if legit task
+        i++;
+        if (cur_process_id == -1 || cur_process_id == -2) continue;
+
+        // check if
+        if (next_tasks[cur_process_id].instructions_planned == -1){
+            next_tasks[cur_process_id] = cur_task;
+        }
+    }
+    next_tasks[i].task_id = -2;
+}
+
+/**
  * Searches all upcoming tasks for suitable candidate to run in unallocated time slot
  * @param next_tasks All upcoming tasks of active processes; index also determines pid; array is terminated with tid -2
  * @return Pointer to task that needs to be run next
@@ -233,7 +277,6 @@ struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[100], struct 
     long cur_lateness = 0;
     struct PBS_Task* cur_task = &next_tasks[0];
     struct PBS_Task* sub_task = NULL;
-
 
     // filter out processes whose next task was not preempted
     // if a task is filtered out its id will be set to -1
@@ -263,36 +306,3 @@ struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[100], struct 
     else return find_task_with_task_id(p, sub_task->task_id);
 }
 
-/**
- * Fills next_tasks with all the upcoming tasks for each process
- * @param p
- * @param next_tasks
- */
-void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES]) {
-    const struct PBS_Task no_task_found = {.task_id = -2, .process_id=-2, .instructions_planned = -2};
-    long found_all_processes = 0;
-    long cur_process_id = -3;
-    struct PBS_Task cur_task;
-    int i = 0;
-    cur_task = p->tasks[i];
-
-    // finds the next task for each process
-    while (cur_process_id != -2){
-        cur_task = p->tasks[i];
-        cur_process_id = cur_task.process_id;
-
-        if (cur_process_id == -1 || cur_process_id == -2) continue;
-
-        if (next_tasks[cur_process_id].instructions_planned == 0){
-            next_tasks[cur_process_id] = cur_task;
-            found_all_processes++;
-        }
-        i++;
-    }
-
-    for (i = 0; i < MAX_NUMBER_PROCESSES; i++){
-        if (next_tasks[i].instructions_planned == 0){
-            next_tasks[i] = no_task_found;
-        }
-    }
-}

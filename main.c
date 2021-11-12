@@ -53,6 +53,213 @@ int main(){
     return test_run();
 }
 
+// #### UNIT TESTS ####
+void run_unit_tests(){
+    test_find_slot_to_move_to();
+    test_move_others();
+    test_task_moving();
+    test_insert_preempted_tasks();
+    test_find_next_task_for_all_processes();
+    test_find_suitable_task();
+    test_move_task_in_plan();
+    test_handle_unallocated();
+}
+
+void test_find_slot_to_move_to(){
+    int i;
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
+    struct PBS_Process processes [MAX_NUMBER_PROCESSES];
+
+    long order[5] = {0,1,2,3,0};
+    long index;
+
+    for ( i = 0; i < 5; i++){
+        p.tasks[i].process_id = order[i];
+    }
+
+    index = find_slot_to_move_to(0, &p );
+    assert(index == 3);
+
+    printf("passed test_find_slot_to_move_to()\n");
+}
+
+void test_move_others(){
+    int i;
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
+    struct PBS_Task* tasks = &p.tasks[0];
+    long order[5] = {0,1,2,3,4};
+    for( i = 0; i < 5; i++){
+        tasks[i].process_id = order [i];
+        tasks[i].task_id = order[i];
+        tasks[i].slot_owner = SHARES_NO_SLOT;
+    }
+
+    move_other_tasks_forward(4, 1, &p);
+    assert(tasks[0].task_id == 1);
+    assert(tasks[3].task_id == 4);
+
+
+    for ( i = 0; i < 5; i++){
+        tasks[i].task_id = order[i];
+    }
+
+    move_other_tasks_forward(5, 2, &p);
+    assert(tasks[0].task_id == 2);
+    assert(tasks[1].task_id == 3);
+
+    printf("passed test_move_others()\n");
+}
+
+void test_task_moving(){
+    long first_task_id;
+    long second_task_id;
+    struct PBS_Plan* plan = (struct PBS_Plan*) malloc(sizeof(struct PBS_Plan));
+    test_plan_parsing(plan);
+
+    plan->tasks[0].slot_owner = plan->tasks[1].task_id;
+    plan->tasks[1].process_id = 0;
+    preempt_cur_task(plan);
+}
+
+void test_insert_preempted_tasks() {
+    int i;
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
+    struct PBS_Task* tasks = &p.tasks[0];
+
+    long order[5] = {0,1,2,3,4};
+    for( i = 0; i < 5; i++){
+        tasks[i].process_id = order [i];
+        tasks[i].task_id = order[i];
+    }
+
+    // 0-1-2-3-4 > 0-1-2-0-4
+    move_preempted_tasks(3,1,tasks, &p);
+
+    assert(tasks[3].task_id == 0);
+    assert(tasks[3].slot_owner == 4);
+    assert(tasks[4].task_id == 4);
+    assert(tasks[2].task_id == 2);
+
+    printf("passed test_insert_preempted_tasks()\n");
+}
+
+void test_find_next_task_for_all_processes(){
+    struct PBS_Plan p = {0};
+    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
+    short has_task_with_termination_id = 0;
+    int i;
+
+    // next task for p0
+    p.tasks[0] = create_task(0,0,10,0);
+    p.tasks[6] = create_task(20, 0, 10, 0);
+    // next task p1
+    p.tasks[1] = create_task(1,1,10,0);
+    p.tasks[5] = create_task(10,1,10,0);
+    // delimiter
+    p.tasks[50] = create_task(-2,0,0,0);
+
+    find_next_task_for_all_processes(&p, next_tasks);
+
+    assert(next_tasks[0].task_id == 0);
+    assert(next_tasks[1].task_id == 1);
+
+    for (i = 0; i < MAX_NUMBER_PROCESSES; i++){
+        if (next_tasks[i].task_id == -2){
+            has_task_with_termination_id++;
+        }
+    }
+    assert(has_task_with_termination_id == 1);
+    printf("passed test_find_next_task_for_all_processes()\n");
+}
+
+
+void test_find_suitable_task(){
+    struct PBS_Plan p = {0};
+    struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES];
+    struct PBS_Task *next_task;
+    p.tasks[0] = create_task(0, 0, 1000, 2000);
+    p.tasks[0].was_preempted = 1;
+    p.processes[0].lateness = -100;
+
+    p.tasks[1] = create_task(1, 1, 1000, 2000);
+    p.tasks[1].was_preempted = 2;
+    p.processes[1].lateness = 200;
+
+    p.tasks[2] = create_task(2,2,200, 200);
+    p.tasks[2].was_preempted = 0;
+    p.processes[2].lateness = 100;
+
+    p.tasks[3].task_id= -2;
+
+    find_next_task_for_all_processes(&p, next_tasks);
+    next_task = find_substitution_task(next_tasks, &p);
+
+    assert(next_task->task_id == 1);
+    printf("passed test_find_suitable_task()\n");
+}
+
+void test_move_task_in_plan(){
+    struct PBS_Plan p = {0};
+
+    p.tasks[0].task_id = 0;
+    p.tasks[1].task_id = 1;
+    p.tasks[2].task_id = 2;
+    p.tasks[3].task_id = 3;
+
+    move_task_in_plan(3, &p.tasks[0], &p);
+
+    assert(p.tasks[0].task_id == 1);
+    assert(p.tasks[1].task_id == 2);
+    assert(p.tasks[2].task_id == 3);
+    assert(p.tasks[3].task_id == 0);
+
+    printf("passed test_move_task_in_plan()\n");
+
+}
+
+void test_handle_unallocated(){
+    int i;
+    struct PBS_Plan p = {0};
+    fill_empty_test_plan(&p);
+    struct PBS_Task* tasks = &p.tasks[0];
+
+
+    // unallocated slot
+    tasks->process_id = -1;
+    tasks->task_id = -1;
+    tasks->instructions_planned = 100;
+    // first task: pid 0, preempted 1, p-lateness 50
+    tasks++;
+    tasks->was_preempted = 1;
+    tasks->process_id = 0;
+    p.processes[0].lateness = 50;
+
+    // second task: pid 1, preempted 1, p-lateness 100
+    tasks++;
+    tasks->was_preempted = 1;
+    tasks->process_id = 1;
+    p.processes[1].lateness = 100;
+
+    // thirst task: pid 2, preempted 0, p-lateness 200
+    tasks++;
+    tasks->was_preempted = 0;
+    tasks->process_id = 2;
+    p.processes[2].lateness = 200;
+
+    handle_unallocated_slot(&p);
+
+    assert(p.tasks[0].process_id == 1);
+    assert(p.tasks[1].process_id == 0);
+    assert(p.tasks[2].process_id == 2);
+
+    printf("passed test_handle_unallocated()\n");
+}
+
+// ### TEST RUN ###
+
 int test_run(){
     int i;
     struct PredictionFailureSignal*  sig;
@@ -235,196 +442,4 @@ struct PBS_Task * run(struct PBS_Plan* p, struct PBS_Task* t){
     } else {
         return t;
     }
-}
-
-void run_unit_tests(){
-    test_find_slot_to_move_to();
-    test_move_others();
-    test_task_moving();
-    test_insert_preempted_tasks();
-    test_find_next_task_for_all_processes();
-    test_find_suitable_task();
-    test_move_task_in_plan();
-    test_handle_unallocated();
-}
-
-void test_task_moving(){
-    long first_task_id;
-    long second_task_id;
-    struct PBS_Plan* plan = (struct PBS_Plan*) malloc(sizeof(struct PBS_Plan));
-    test_plan_parsing(plan);
-
-    plan->tasks[0].slot_owner = plan->tasks[1].task_id;
-    plan->tasks[1].process_id = 0;
-    preempt_cur_task(plan);
-}
-
-void test_find_slot_to_move_to(){
-    int i;
-    struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
-    struct PBS_Process processes [MAX_NUMBER_PROCESSES];
-
-    long order[5] = {0,1,2,3,0};
-    long index;
-
-    for ( i = 0; i < 5; i++){
-        p.tasks[i].process_id = order[i];
-    }
-
-    index = find_slot_to_move_to(0, &p );
-    assert(index == 3);
-
-    printf("passed test_find_slot_to_move_to()\n");
-}
-
-void test_move_others(){
-    int i;
-    struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
-    struct PBS_Task* tasks = &p.tasks[0];
-    long order[5] = {0,1,2,3,4};
-    for( i = 0; i < 5; i++){
-        tasks[i].process_id = order [i];
-        tasks[i].task_id = order[i];
-        tasks[i].slot_owner = SHARES_NO_SLOT;
-    }
-
-    move_other_tasks_forward(4, 1, &p);
-    assert(tasks[0].task_id == 1);
-    assert(tasks[3].task_id == 4);
-
-
-    for ( i = 0; i < 5; i++){
-        tasks[i].task_id = order[i];
-    }
-
-    move_other_tasks_forward(5, 2, &p);
-    assert(tasks[0].task_id == 2);
-    assert(tasks[1].task_id == 3);
-
-    printf("passed test_move_others()\n");
-}
-
-void test_insert_preempted_tasks() {
-    int i;
-    struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
-    struct PBS_Task* tasks = &p.tasks[0];
-
-    long order[5] = {0,1,2,3,4};
-    for( i = 0; i < 5; i++){
-        tasks[i].process_id = order [i];
-        tasks[i].task_id = order[i];
-    }
-
-    // 0-1-2-3-4 > 0-1-2-0-4
-    move_preempted_tasks(3,1,tasks, &p);
-
-    assert(tasks[3].task_id == 0);
-    assert(tasks[3].slot_owner == 4);
-    assert(tasks[4].task_id == 4);
-    assert(tasks[2].task_id == 2);
-
-    printf("passed test_insert_preempted_tasks()\n");
-}
-
-void test_handle_unallocated(){
-    int i;
-    struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
-    struct PBS_Task* tasks = &p.tasks[0];
-
-
-    // unallocated slot
-    tasks->process_id = -1;
-    tasks->task_id = -1;
-    tasks->instructions_planned = 100;
-    // first task: pid 0, preempted 1, p-lateness 50
-    tasks++;
-    tasks->was_preempted = 1;
-    tasks->process_id = 0;
-    p.processes[0].lateness = 50;
-
-    // second task: pid 1, preempted 1, p-lateness 100
-    tasks++;
-    tasks->was_preempted = 1;
-    tasks->process_id = 1;
-    p.processes[1].lateness = 100;
-
-    // thirst task: pid 2, preempted 0, p-lateness 200
-    tasks++;
-    tasks->was_preempted = 0;
-    tasks->process_id = 2;
-    p.processes[2].lateness = 200;
-
-    handle_unallocated_slot(&p);
-
-    assert(p.tasks[0].process_id == 1);
-    assert(p.tasks[1].process_id == 0);
-    assert(p.tasks[2].process_id == 2);
-
-    printf("passed test_handle_unallocated()\n");
-}
-
-void test_find_suitable_task(){
-    struct PBS_Plan p = {0};
-    struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES];
-    struct PBS_Task *next_task;
-    p.tasks[0] = create_task(0, 0, 1000, 2000);
-    p.tasks[0].was_preempted = 1;
-    p.processes[0].lateness = -100;
-
-    p.tasks[1] = create_task(1, 1, 1000, 2000);
-    p.tasks[1].was_preempted = 2;
-    p.processes[1].lateness = -200;
-
-    p.tasks[2] = create_task(2,2,200, 200);
-    p.tasks[2].was_preempted = 0;
-    p.processes[2].lateness = -2000;
-
-    p.tasks[3].task_id = -2;
-
-    next_task = find_substitution_task(next_tasks, &p);
-
-     assert(next_task->task_id == 1);
-    printf("passed test_find_suitable_task()\n");
-}
-
-void test_find_next_task_for_all_processes(){
-    struct PBS_Plan p = {0};
-    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
-
-    p.tasks[0] = create_task(0,0,10,0);
-    p.tasks[1] = create_task(1,0,10,0);
-
-    p.tasks[5] = create_task(10,1,10,0);
-    p.tasks[100] = create_task(-2,-2,0,0);
-
-    find_next_task_for_all_processes(&p, next_tasks);
-
-    assert(next_tasks[0].task_id == 0);
-    assert(next_tasks[1].task_id == 10);
-    assert(next_tasks[2].task_id == -2);
-
-    printf("passed test_find_next_task_for_all_processes()\n");
-}
-
-void test_move_task_in_plan(){
-    struct PBS_Plan p = {0};
-
-    p.tasks[0].task_id = 0;
-    p.tasks[1].task_id = 1;
-    p.tasks[2].task_id = 2;
-    p.tasks[3].task_id = 3;
-
-    move_task_in_plan(3, &p.tasks[0], &p);
-
-    assert(p.tasks[0].task_id == 1);
-    assert(p.tasks[1].task_id == 2);
-    assert(p.tasks[2].task_id == 3);
-    assert(p.tasks[3].task_id == 0);
-
-    printf("passed test_move_task_in_plan()\n");
-
 }
