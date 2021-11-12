@@ -64,6 +64,7 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
     update_retired_instructions_process(instructions_retired, p->cur_process);
     p->instructions_retired += instructions_retired;
 }
+EXPORT_SYMBOL(update_retired_instructions);
 
 /**
  * Updates the pointer cur_task & cur_process to reflect current state
@@ -112,6 +113,7 @@ void update_free_space_usage(long length_free_space, struct PBS_Plan* p){
 void update_node_lateness(long instructions, struct PBS_Plan* p){
     p->lateness += instructions;
 }
+
 void change_plan_state(struct PBS_Plan* p, short state){
     p->state = state;
     if (LOG_PBS)
@@ -145,5 +147,16 @@ EXPORT_SYMBOL(number_processes_in_plan);
  * @param p
  */
 void move_task_in_plan(int insertion_index, struct PBS_Task* task_to_move, struct PBS_Plan* p){
-    struct PBS_Task tmp = p->tasks[insertion_index];
+    int i;
+    struct PBS_Task tmp;
+    struct PBS_Task insertion_task = *task_to_move;
+
+    // copies entry from i to i-1
+    for (i = insertion_index ; i >= 0; i--){
+        p->tasks[i] = tmp;
+        tmp = p->tasks[i-1];
+    }
+    p->tasks[insertion_index] =
 }
+EXPORT_SYMBOL(move_task_in_plan);
+
