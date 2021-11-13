@@ -223,30 +223,31 @@ void test_move_task_in_plan(){
 void test_handle_unallocated(){
     int i;
     struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
     struct PBS_Task* tasks = &p.tasks[0];
+    struct PBS_Task cur_t;
+    fill_empty_test_plan(&p);
 
 
     // unallocated slot
-    tasks->process_id = -1;
-    tasks->task_id = -1;
-    tasks->instructions_planned = 100;
+    cur_t = create_task(-1, -1, 100, 100);
+    p.tasks[0] = cur_t;
+
     // first task: pid 0, preempted 1, p-lateness 50
-    tasks++;
-    tasks->was_preempted = 1;
-    tasks->process_id = 0;
+    cur_t = create_task(0,0, 100, 100);
+    cur_t.was_preempted = 1;
     p.processes[0].lateness = 50;
+    p.tasks[1] = cur_t;
 
     // second task: pid 1, preempted 1, p-lateness 100
-    tasks++;
-    tasks->was_preempted = 1;
-    tasks->process_id = 1;
+    cur_t = create_task(1,1, 100, 100);
+    cur_t.was_preempted = 1;
+    p.tasks[1] = cur_t;
     p.processes[1].lateness = 100;
 
     // thirst task: pid 2, preempted 0, p-lateness 200
-    tasks++;
-    tasks->was_preempted = 0;
-    tasks->process_id = 2;
+    cur_t = create_task(2, 2, 100, 100);
+    cur_t.was_preempted = 0;
+    p.tasks[2] = cur_t;
     p.processes[2].lateness = 200;
 
     handle_unallocated_slot(&p);

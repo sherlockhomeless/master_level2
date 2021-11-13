@@ -251,8 +251,6 @@ void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task 
         cur_process_id = cur_task.process_id;
         cur_task_id = cur_task.task_id;
 
-        del = next_tasks[cur_process_id];
-
         // continue if legit task
         i++;
         if (cur_process_id == -1 || cur_process_id == -2) continue;
