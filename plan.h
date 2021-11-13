@@ -18,7 +18,7 @@ struct PBS_Task* find_task_with_task_id(struct PBS_Plan* , long);
 void update_node_lateness(long , struct PBS_Plan* );
 void change_plan_state(struct PBS_Plan*, short);
 int number_processes_in_plan(struct PBS_Plan*);
-void move_task_in_plan(int insertion_index, struct PBS_Task* task_to_move, struct PBS_Plan* p);
+void replace_unallocated_slot_in_plan(struct PBS_Task *replacement_task, struct PBS_Plan *p);
 
 
 // --- for testing ---

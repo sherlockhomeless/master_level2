@@ -214,9 +214,9 @@ void handle_unallocated_slot(struct PBS_Plan* p){
     // stores upcoming task for each process in next_task_each_process
     find_next_task_for_all_processes(p, next_tasks);
     // set next_task_to_run to task that is preempted & most late
-    next_task_to_run = find_substitution_task(next_tasks, NULL);
+    next_task_to_run = find_substitution_task(next_tasks, p);
 
-    move_task_in_plan(0, next_task_to_run, p);
+    replace_unallocated_slot_in_plan(next_task_to_run, p);
     clear_preemption(next_task_to_run);
 }
 EXPORT_SYMBOL(handle_unallocated_slot);
@@ -233,7 +233,6 @@ void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task 
     long cur_task_id = -3;
     struct PBS_Task cur_task;
     int i = 0;
-    struct PBS_Task del;
     cur_task = p->tasks[i];
 
     // mark all tasks as not found
@@ -279,7 +278,7 @@ struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[100], struct 
     // filter out processes whose next task was not preempted
     // if a task is filtered out its id will be set to -1
     while (cur_task->task_id != -2){
-        //something is fucky with taskid
+
         if (cur_task->was_preempted == 0){
             cur_task->task_id = -1;
         }

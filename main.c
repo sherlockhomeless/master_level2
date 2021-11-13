@@ -42,7 +42,7 @@ void test_task_moving();
 void test_handle_unallocated();
 void test_find_next_task_for_all_processes();
 void test_find_suitable_task();
-void test_move_task_in_plan();
+void test_replace_unallocated_slot_in_plan();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -61,7 +61,7 @@ void run_unit_tests(){
     test_insert_preempted_tasks();
     test_find_next_task_for_all_processes();
     test_find_suitable_task();
-    test_move_task_in_plan();
+    test_replace_unallocated_slot_in_plan();
     test_handle_unallocated();
 }
 
@@ -152,11 +152,13 @@ void test_find_next_task_for_all_processes(){
     short has_task_with_termination_id = 0;
     int i;
 
+    // idle slot
+    p.tasks[0] = create_task(-1, -1, 100, 100);
     // next task for p0
-    p.tasks[0] = create_task(0,0,10,0);
+    p.tasks[1] = create_task(0,0,10,0);
     p.tasks[6] = create_task(20, 0, 10, 0);
     // next task p1
-    p.tasks[1] = create_task(1,1,10,0);
+    p.tasks[2] = create_task(1,1,10,0);
     p.tasks[5] = create_task(10,1,10,0);
     // delimiter
     p.tasks[50] = create_task(-2,0,0,0);
@@ -201,22 +203,23 @@ void test_find_suitable_task(){
     printf("passed test_find_suitable_task()\n");
 }
 
-void test_move_task_in_plan(){
+void test_replace_unallocated_slot_in_plan(){
     struct PBS_Plan p = {0};
 
-    p.tasks[0] = create_task(0, 0, 10, 10);
+    p.tasks[0] = create_task(-1, -1, 10, 10);
     p.tasks[1] = create_task(1, 1, 10, 10);
     p.tasks[2] = create_task(2, 2, 10, 10);
     p.tasks[3] = create_task(3, 3, 10, 10);
+    p.tasks[4] = create_task(-2, -2, 0, 0);
 
-    move_task_in_plan(3, &p.tasks[0], &p);
+
+    replace_unallocated_slot_in_plan(&p.tasks[0], &p);
 
     assert(p.tasks[0].task_id == 1);
     assert(p.tasks[1].task_id == 2);
     assert(p.tasks[2].task_id == 3);
-    assert(p.tasks[3].task_id == 0);
-
-    printf("passed test_move_task_in_plan()\n");
+    assert(p.tasks[3].task_id == -2);
+    printf("passed test_replace_unallocated_slot_in_plan()\n");
 
 }
 
@@ -241,15 +244,18 @@ void test_handle_unallocated(){
     // second task: pid 1, preempted 1, p-lateness 100
     cur_t = create_task(1,1, 100, 100);
     cur_t.was_preempted = 1;
-    p.tasks[1] = cur_t;
+    p.tasks[2] = cur_t;
     p.processes[1].lateness = 100;
 
     // thirst task: pid 2, preempted 0, p-lateness 200
     cur_t = create_task(2, 2, 100, 100);
     cur_t.was_preempted = 0;
-    p.tasks[2] = cur_t;
+    p.tasks[3] = cur_t;
     p.processes[2].lateness = 200;
 
+    // terminate list of valid tasks
+    cur_t = create_task(-2, -2, -2, -2);
+    p.tasks[4] = cur_t;
     handle_unallocated_slot(&p);
 
     assert(p.tasks[0].process_id == 1);
@@ -260,7 +266,6 @@ void test_handle_unallocated(){
 }
 
 // ### TEST RUN ###
-
 int test_run(){
     int i;
     struct PredictionFailureSignal*  sig;

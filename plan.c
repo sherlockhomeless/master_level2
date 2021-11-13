@@ -140,23 +140,24 @@ int number_processes_in_plan(struct PBS_Plan* p){
 EXPORT_SYMBOL(number_processes_in_plan);
 
 /**
- * Moves task_to_move from its current place to p->tasks[insertion_index]
- * All other tasks are shifted forward
+ * Replaces the current task at p->tasks[0] (supposed to be an unallocated time slot) with the task pointed to by replacement_task
  * @param insertion_index
- * @param task_to_move
+ * @param replacement_task
  * @param p
  */
-void move_task_in_plan(int insertion_index, struct PBS_Task* task_to_move, struct PBS_Plan* p){
+void replace_unallocated_slot_in_plan(struct PBS_Task* replacement_task, struct PBS_Plan *p) {
     int i;
     struct PBS_Task tmp;
-    struct PBS_Task insertion_task = *task_to_move;
+    struct PBS_Task* cur_task = replacement_task;
 
-    // copies entry from i to i-1
-    for (i = 0 ; i <= insertion_index -1 ; i++){
-        p->tasks[i] = p->tasks[i+1];
-        tmp = p->tasks[i-1];
+    // set current task to replacement task
+    p->tasks[0] = *replacement_task;
+
+    // move all tasks behind replacement_task one forward
+    while (cur_task->task_id != -2){
+        *cur_task = *(cur_task+1);
+        cur_task++;
     }
-    p->tasks[insertion_index] = insertion_task;
 }
-EXPORT_SYMBOL(move_task_in_plan);
+EXPORT_SYMBOL(replace_unallocated_slot_in_plan);
 
