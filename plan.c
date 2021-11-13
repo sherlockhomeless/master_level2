@@ -152,11 +152,11 @@ void move_task_in_plan(int insertion_index, struct PBS_Task* task_to_move, struc
     struct PBS_Task insertion_task = *task_to_move;
 
     // copies entry from i to i-1
-    for (i = insertion_index ; i >= 0; i--){
-        p->tasks[i] = tmp;
+    for (i = 0 ; i <= insertion_index -1 ; i++){
+        p->tasks[i] = p->tasks[i+1];
         tmp = p->tasks[i-1];
     }
-    p->tasks[insertion_index] =
+    p->tasks[insertion_index] = insertion_task;
 }
 EXPORT_SYMBOL(move_task_in_plan);
 
