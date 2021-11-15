@@ -162,7 +162,7 @@ int get_stack_size_preempted_tasks(struct PBS_Task *tasks_to_move, struct PBS_Pl
 EXPORT_SYMBOL(get_stack_size_preempted_tasks);
 
 /**
- * Moves all tasks forward to make room for the preempted task
+ * Move preempted tasks to their corresponding insertion slot and shifts all other tasks forward so no gaps arise
  * @param insertion_slot
  * @param stack_size
  * @param p
@@ -170,9 +170,20 @@ EXPORT_SYMBOL(get_stack_size_preempted_tasks);
 void move_other_tasks_forward(long insertion_slot, long stack_size, struct PBS_Plan *p) {
     // move other tasks forwards
     int i;
+    struct PBS_Task preempted_task_task [stack_size];
+    // save preempted tasks
+    for (i = 0; i < stack_size; i++){
+        preempted_task_task[i] = *(p->cur_task+i);
+    }
+    // move other tasks forward
     for ( i = 0; i < insertion_slot; i++) {
         p->tasks[i] = p->tasks[i + stack_size];
     }
+    // write preempted tasks to insertion slot
+    for(i = 0; i < stack_size; i++){
+        p->tasks[insertion_slot + i] = preempted_task_task[i];
+    }
+
 }
 
 EXPORT_SYMBOL(move_other_tasks_forward);

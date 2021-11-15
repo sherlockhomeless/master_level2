@@ -102,7 +102,7 @@ void test_move_others(){
         tasks[i].process_id = order [i];
         tasks[i].task_id = order[i];
         tasks[i].slot_owner = tasks[i].task_id;
-        tasks[i].instructions_planned = i;
+        tasks[i].instructions_planned = 100;
     }
 
     move_other_tasks_forward(4, 1, &p);
@@ -116,7 +116,7 @@ void test_move_others(){
         tasks[i].task_id = order[i];
     }
 
-    move_other_tasks_forward(4, 2, &p);
+    move_other_tasks_forward(3, 2, &p);
     assert(tasks[0].task_id == 2);
     assert(tasks[1].task_id == 3);
     assert(tasks[2].task_id == 4);
