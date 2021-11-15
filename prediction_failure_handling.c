@@ -143,7 +143,7 @@ int get_stack_size_preempted_tasks(struct PBS_Task *tasks_to_move, struct PBS_Pl
     struct PBS_Task* task_to_check = p->cur_task;
 
     //
-    while(task_to_check->slot_owner != SHARES_NO_SLOT && task_to_check->process_id == p->cur_task->process_id){
+    while(task_to_check->slot_owner != task_to_check->task_id && task_to_check->process_id == p->cur_task->process_id){
         tasks_to_move[index] = *(task_to_check);
         index++;
         task_to_check++;

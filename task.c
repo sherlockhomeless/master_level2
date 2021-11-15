@@ -41,6 +41,25 @@ void clear_preemption(struct PBS_Task *t){
 }
 
 /**
+ * Tracks the state changes of a task in terms of lateness
+ * @param instructions_to_run Instructions run on the task
+ * @param task
+ * @return Task-States, as defined in Task States
+ */
+
+short does_task_turn_late(long instructions_to_run, struct PBS_Task* task){
+    if (task->instructions_retired_slot >= task->instructions_planned){
+        return IS_LATE;
+    }
+    if (task->instructions_retired_slot + instructions_to_run > task->instructions_planned)
+        return TURNS_LATE;
+    else
+        return ON_TIME;
+}
+EXPORT_SYMBOL(does_task_turn_late);
+
+
+/**
  * Creates a Task with the given parameter
  * @param task_id
  * @param process_id

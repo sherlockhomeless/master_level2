@@ -11,9 +11,6 @@
 #define PLAN_TASK_FINISHED 4
 #define PLAN_TASK_ABORTED 5
 
-#define SHARES_NO_SLOT 0
-
-
 #define ON_PLAN 0
 #define SIGNALED 1
 #define PLAN_FINISHED 2

@@ -8,39 +8,19 @@
 #include "process.h"
 #include "config.h"
 
-// --- Task States ---
-#define ON_TIME 0
-#define TURNS_LATE 1
-#define IS_LATE 2
 
 void update_free_space_usage(long, struct PBS_Plan *);
-short does_task_turn_late(long instructions_to_run, struct PBS_Task *task);
 
 /**
- * Tracks the state changes of a task in terms of lateness
- * @param instructions_to_run Instructions run on the task
- * @param task
- * @return Task-States, see in defines
- */
-short does_task_turn_late(long instructions_to_run, struct PBS_Task* task){
-    if (task->instructions_retired_slot >= task->instructions_planned){
-        return IS_LATE;
-    }
-    if (task->instructions_retired_slot + instructions_to_run > task->instructions_planned)
-        return TURNS_LATE;
-    else
-        return ON_TIME;
-}
-EXPORT_SYMBOL(does_task_turn_late);
-
-/**
- * Updates all data structures that are required for threshold tracking and calculating, also updates the state of a task accordingly
+ * Updates data structures to reflect state of plan if instructions_retired are run
  * @param instructions_retired PMU-Counter since it was last read
  * @param p
  */
 void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
     struct PBS_Task * slot_owner;
     short task_state;
+
+    // ???
     if (instructions_retired < 0){
         update_free_space_usage(instructions_retired, p);
         return;
@@ -52,7 +32,7 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
     pbs_update_retired_instructions_task(instructions_retired, p->cur_task);
 
     // --- update retired instructions on slot ---
-    if (p->cur_task->slot_owner == SHARES_NO_SLOT){
+    if (p->cur_task->slot_owner == p->cur_task->task_id){
         p->cur_task->instructions_retired_slot += instructions_retired;
     } else {
         slot_owner = find_task_with_task_id(p, p->cur_task->slot_owner);

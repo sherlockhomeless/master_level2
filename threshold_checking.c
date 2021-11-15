@@ -43,7 +43,7 @@ short check_t1(struct PBS_Plan* p) {
         return OK;
     }
     //task was moved and is not in original slot anymore
-    if (p->cur_task->slot_owner == SHARES_NO_SLOT){
+    if (p->cur_task->slot_owner == p->cur_task->task_id){
         //todo: stack check, is >1 one task in new slot
         task_to_check = p->cur_task;
     } else {

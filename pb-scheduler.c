@@ -44,7 +44,7 @@ EXPORT_SYMBOL(get_pbs_plan);
  * Is called by the tick-function after each timer interrupt
  * @param p
  */
-void pbs_handle_prediction_failure(struct PBS_Plan *p) {
+void pbs_run_timer_tick(struct PBS_Plan *p) {
     long retired_instructions;
     assert(p->num_tasks < 400);
     if (p->cur_task->task_id == -2){
@@ -54,18 +54,18 @@ void pbs_handle_prediction_failure(struct PBS_Plan *p) {
         return;
     }
 
-    printf(KERN_ERR "[PBS_pbs_handle_prediction_failure]%ld: ran tick, cur_task=%ld", p->tick_counter, p->cur_task->task_id);
+    printf(KERN_INFO "[PBS_pbs_handle_prediction_failure]%ld: ran tick, cur_task=%ld\n", p->tick_counter, p->cur_task->task_id);
     retired_instructions = get_retired_instructions();
     update_retired_instructions(retired_instructions, p);
 
-    if(p->cur_task->state == PLAN_TASK_FINISHED){ // pbs_handle_prediction_failure() was called after a task has finished
+    if(p->cur_task->state == PLAN_TASK_FINISHED){ // pbs_run_timer_tick() was called after a task has finished
         schedule_task_finished(p);
     } else {
         schedule_timer_tick(p);
     }
     p->tick_counter++;
 }
-EXPORT_SYMBOL(pbs_handle_prediction_failure);
+EXPORT_SYMBOL(pbs_run_timer_tick);
 
 
 /**
@@ -167,7 +167,7 @@ EXPORT_SYMBOL(switch_task);
  */
 void start_run(struct PBS_Plan *p){
     while (p->state != PLAN_FINISHED){
-        pbs_handle_prediction_failure(p);
+        pbs_run_timer_tick(p);
     }
     printf(KERN_EMERG "[PBS_start_run]%ld: Plan finished!", p->tick_counter);
 }

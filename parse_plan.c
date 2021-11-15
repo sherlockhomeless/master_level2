@@ -124,7 +124,6 @@ char* parse_next_task(struct PBS_Plan* plan, int index, char* cur_position){
     cur_t.instructions_retired_slot = 0;
     cur_t.instructions_retired_task = 0;
     cur_t.state = PLAN_TASK_WAITING;
-    cur_t.slot_owner = SHARES_NO_SLOT;
     cur_t.was_preempted = 0;
 
     cur_t.process_id = parse_next_number(&cur_position);
@@ -133,6 +132,7 @@ char* parse_next_task(struct PBS_Plan* plan, int index, char* cur_position){
     }
     cur_position++;
     cur_t.task_id = parse_next_number(&cur_position);
+    cur_t.slot_owner = cur_t.task_id;
     cur_position++;
     cur_t.instructions_planned = parse_next_number(&cur_position);
     if (cur_t.process_id != -1){
