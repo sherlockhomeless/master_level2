@@ -8,13 +8,17 @@
 #include "task.h"
 #include "prediction_failure_handling.h"
 
-void pbs_update_retired_instructions_task(long instructions, struct PBS_Task*task) {
+/**
+ * Function checks if task is late and if it has finished
+ * @param instructions
+ * @param task
+ */
+void pbs_update_retired_instructions_task(long instructions, struct PBS_Task* task) {
     task->instructions_retired_task += instructions;
 
     // update lateness
     if (task->instructions_retired_task > task->instructions_planned){
         task->lateness = task->instructions_retired_task - task->instructions_planned;
-        return;
     }
     // check if finished
     if (task->instructions_retired_task >= task->instructions_real){
@@ -22,8 +26,6 @@ void pbs_update_retired_instructions_task(long instructions, struct PBS_Task*tas
         change_task_state(task, PLAN_TASK_FINISHED);
         return;
     }
-    // task has not finished OR is late
-    task->lateness = 0;
 }
 EXPORT_SYMBOL(pbs_update_retired_instructions_task);
 

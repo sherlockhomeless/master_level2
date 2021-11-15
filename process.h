@@ -13,4 +13,5 @@ void update_finished_tasks_in_process(struct PBS_Process* process);
 
 short is_process_late(struct PBS_Process*);
 
+struct PBS_Process create_process(long pid, long num_tasks, long buffer, long length_process);
 #endif //LEVEL2_PROCESS_H

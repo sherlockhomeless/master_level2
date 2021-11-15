@@ -34,5 +34,11 @@ EXPORT_SYMBOL(is_process_late);
 void update_finished_tasks_in_process(struct PBS_Process* process){
     process->num_tasks_remaining--;
 }
-
 EXPORT_SYMBOL(update_finished_tasks_in_process);
+
+struct PBS_Process create_process(long pid, long num_tasks, long buffer, long length_plan){
+    struct PBS_Process new_process = {pid, num_tasks, buffer, 0, length_plan, 0};
+    return new_process;
+
+}
+EXPORT_SYMBOL(create_process);

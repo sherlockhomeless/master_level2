@@ -32,11 +32,10 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
     pbs_update_retired_instructions_task(instructions_retired, p->cur_task);
 
     // --- update retired instructions on slot ---
-    if (p->cur_task->slot_owner == p->cur_task->task_id){
+    if (p->cur_task->slot_owner == p->cur_task->task_id){ // no preemption
         p->cur_task->instructions_retired_slot += instructions_retired;
-    } else {
+    } else { // preemption
         slot_owner = find_task_with_task_id(p, p->cur_task->slot_owner);
-
         slot_owner->instructions_retired_slot += instructions_retired;
     }
 

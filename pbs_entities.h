@@ -33,7 +33,7 @@
 // PROCESS
 struct PBS_Process {
     long process_id; // classic PID
-    long num_tasks_remaining; //todo: update
+    long num_tasks_remaining;
     long buffer;
     long lateness;
     long length_plan;

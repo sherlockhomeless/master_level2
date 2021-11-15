@@ -20,7 +20,6 @@ void schedule_task_finished(struct PBS_Plan*);
 void schedule_timer_tick(struct PBS_Plan*);
 void switch_task(struct PBS_Plan*);
 void handle_free_slot(struct PBS_Plan*);
-void handle_unallocated_slot(struct PBS_Plan* p);
 struct PBS_Process* find_latest_process(struct PBS_Plan* p);
 void idle(struct PBS_Plan*);
 
@@ -31,14 +30,6 @@ struct PBS_Plan* pbs_plan_ptr = &pbs_plan;
 
 static int times_address_read = 0;
 
-struct PBS_Plan* get_pbs_plan(void){
-    printf(KERN_ALERT "[PBS_get_pbs_plan]: pbs_plan_address is %p, read %d times\n", pbs_plan_ptr, times_address_read);
-    if (pbs_plan_ptr == NULL)
-        printf(KERN_ALERT "[PBS_get_pbs_plan]: Plan is null\n");
-    times_address_read++;
-    return pbs_plan_ptr;
-}
-EXPORT_SYMBOL(get_pbs_plan);
 
 /**
  * Is called by the tick-function after each timer interrupt
@@ -47,6 +38,10 @@ EXPORT_SYMBOL(get_pbs_plan);
 void pbs_run_timer_tick(struct PBS_Plan *p) {
     long retired_instructions;
     assert(p->num_tasks < 400);
+    if (p->tick_counter == 73){
+        int del = 10;
+        int del2 = del + 10;
+    }
     if (p->cur_task->task_id == -2){
         if (LOG_PBS)
             printf(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);
@@ -75,18 +70,16 @@ EXPORT_SYMBOL(pbs_run_timer_tick);
 void schedule_task_finished(struct PBS_Plan *p){
     long lateness_cur_task;
     long instruction_surplus = p->cur_task->instructions_retired_slot - p->cur_task->instructions_real; // take surplus of instructions attributed to cur_task and remove them
-    // --- check ---
-    // todo: include other threshold-checks
-    // check_tm2_node(p) && check_tm2_process(p->cur_process) &&
+
+    // --- check t-2 ---
     if ( check_tm2_task(p)){
-        //TODO: signal tm2
         signal_tm2(p);
         if (LOG_PBS)
             printf(KERN_WARNING "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished early\n",p->tick_counter, p->cur_task->task_id);
     } else {
         if (LOG_PBS)
             printf(KERN_INFO "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
-               p->cur_task->instructions_planned, p->cur_task->instructions_real, p->cur_task->instructions_retired_slot);
+                   p->cur_task->instructions_planned, p->cur_task->instructions_real, p->cur_task->instructions_retired_slot);
     }
 
     // --- update ---
@@ -102,7 +95,6 @@ void schedule_task_finished(struct PBS_Plan *p){
         p->stress--;
     switch_task(p);
 }
-
 EXPORT_SYMBOL(schedule_task_finished);
 
 
@@ -112,14 +104,12 @@ EXPORT_SYMBOL(schedule_task_finished);
  */
 void schedule_timer_tick(struct PBS_Plan *p){
     long usable_buffer;
-    //todo: test stress
-    //todo: preemptions
+
     // --- check for t2 ---
     if(p->stress <= 0) {
-        p->state = ON_PLAN;
         usable_buffer = calculate_usable_buffer(FREE_TIME, ASSIGNABLE_BUFFER, p->cur_process->buffer,
-                                                     p->cur_process->length_plan,
-                                                     p->cur_process->instructions_retired);
+                                                p->cur_process->length_plan,
+                                                p->cur_process->instructions_retired);
         if (check_t2_task(p) ||
             check_t2_process(p) ||
             check_t2_node(p))            {
@@ -134,11 +124,10 @@ void schedule_timer_tick(struct PBS_Plan *p){
     }
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_schedule_timer_tick]%ld: (%ld,%ld) retired instructions %ld\n",
-           p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
+               p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
     if (p->stress)
         p->stress--;
 }
-
 EXPORT_SYMBOL(schedule_timer_tick);
 
 /**
@@ -148,6 +137,7 @@ EXPORT_SYMBOL(schedule_timer_tick);
 void switch_task(struct PBS_Plan* p){
     struct PBS_Task* old_task = p->cur_task;
     assert(p->cur_task->state == PLAN_TASK_FINISHED);
+
     p->tasks_finished++;
     p->index_cur_task++;
     p->cur_task++;
@@ -158,7 +148,6 @@ void switch_task(struct PBS_Plan* p){
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_switch_task]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
 }
-
 EXPORT_SYMBOL(switch_task);
 
 /**
@@ -187,6 +176,7 @@ void handle_free_slot(struct PBS_Plan* p){
     assert(p->cur_process->process_id == -1);
     if (LOG_PBS)
         printf(KERN_INFO "[PBS_handle_free_slot]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
+
     lateness_node_before = p->lateness;
     free_slot = p->tasks;
     p->index_cur_task++;
@@ -303,3 +293,11 @@ struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[100], struct 
     else return find_task_with_task_id(p, sub_task->task_id);
 }
 
+struct PBS_Plan* get_pbs_plan(void){
+    printf(KERN_ALERT "[PBS_get_pbs_plan]: pbs_plan_address is %p, read %d times\n", pbs_plan_ptr, times_address_read);
+    if (pbs_plan_ptr == NULL)
+        printf(KERN_ALERT "[PBS_get_pbs_plan]: Plan is null\n");
+    times_address_read++;
+    return pbs_plan_ptr;
+}
+EXPORT_SYMBOL(get_pbs_plan);

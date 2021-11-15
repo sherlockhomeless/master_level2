@@ -14,6 +14,7 @@
 #include "userland_only_helper.h"
 #include "plan.h"
 #include "task.h"
+#include "process.h"
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
@@ -43,6 +44,7 @@ void test_handle_unallocated();
 void test_find_next_task_for_all_processes();
 void test_find_suitable_task();
 void test_replace_unallocated_slot_in_plan();
+void test_task_state_changes_when_finished();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -63,6 +65,7 @@ void run_unit_tests(){
     test_find_suitable_task();
     test_replace_unallocated_slot_in_plan();
     test_handle_unallocated();
+    test_task_state_changes_when_finished();
 }
 
 void test_find_slot_to_move_to(){
@@ -265,6 +268,24 @@ void test_handle_unallocated(){
     printf("passed test_handle_unallocated()\n");
 }
 
+// run a task that takes one timer tick one timer tick
+void test_task_state_changes_when_finished(){
+    struct PBS_Plan p = {0};
+    struct PBS_Task task = create_task(0, 0, INS_PER_TICK, INS_PER_TICK);
+    struct PBS_Task* first_task = &p.tasks[0];
+    p.tasks[0] = task;
+    p.cur_task = &p.tasks[0];
+    p.processes[0] = create_process(0,1,10000000, 1000000);
+    p.cur_process = &p.processes[0];
+
+    task = create_task(1,1, INS_PER_TICK, INS_PER_TICK);
+    p.tasks[1] = task;
+    pbs_run_timer_tick(&p);
+
+    assert(first_task != p.cur_task);
+    assert(first_task->state == PLAN_TASK_FINISHED);
+}
+
 // ### TEST RUN ###
 // creates a plan, runs a couple of function to check if information tracking is working properly
 // then runs the full remaining plan to test if it can without any errors
@@ -295,29 +316,24 @@ int test_run(){
     }
     return 0;
 }
-/**
- *
- * @param plan
- */
+
 void check_run_task_on_time(struct PBS_Plan* plan){
-    int i;
-    long ins_per_tick = INS_PER_TICK;
-    int ticks_to_finish_first_task;
     struct PBS_Task* first_task;
     struct PBS_Process* first_process;
 
-    first_task = plan->cur_task;
+    first_task = &plan->tasks[0];
     first_task->instructions_real = first_task->instructions_planned;
     first_process = plan->cur_process;
 
     // finish first task
-    ticks_to_finish_first_task = (int) (plan->cur_task->instructions_real / (long) ins_per_tick) + 1;
-    for( i = 0; i < ticks_to_finish_first_task; i++){
+    while(first_task->state != PLAN_TASK_FINISHED){
         pbs_run_timer_tick(plan);
+        printf("%p, %p\n", first_task, plan->cur_task);
     }
 
     assert(plan->tasks_finished == 1);
     assert(plan->cur_task->task_id == 1);
+    assert(plan->cur_process != first_process);
 }
 // t1
 void check_run_task_early_time(struct PBS_Plan * p) {
