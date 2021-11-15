@@ -56,7 +56,6 @@ short check_t1(struct PBS_Plan* p) {
         return OK;
     }
 }
-
 EXPORT_SYMBOL(check_t1);
 
 long calculate_t2_task(struct PBS_Plan *p) {

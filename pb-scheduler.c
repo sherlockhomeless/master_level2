@@ -38,10 +38,6 @@ static int times_address_read = 0;
 void pbs_run_timer_tick(struct PBS_Plan *p) {
     long retired_instructions;
     assert(p->num_tasks < 400);
-    if (p->tick_counter == 73){
-        int del = 10;
-        int del2 = del + 10;
-    }
     if (p->cur_task->task_id == -2){
         if (LOG_PBS)
             printf(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);

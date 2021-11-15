@@ -35,6 +35,7 @@ void check_run_task_late_time(struct PBS_Plan *plan);
 void check_preempt_task(struct PBS_Plan *plan);
 void check_signal_t2_task(struct PBS_Plan *plan);
 
+// ### UNIT TESTS ####
 void run_unit_tests();
 void test_find_slot_to_move_to();
 void test_move_others();
@@ -45,6 +46,8 @@ void test_find_next_task_for_all_processes();
 void test_find_suitable_task();
 void test_replace_unallocated_slot_in_plan();
 void test_task_state_changes_when_finished();
+void test_move_other_tasks_forward();
+
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -66,6 +69,7 @@ void run_unit_tests(){
     test_replace_unallocated_slot_in_plan();
     test_handle_unallocated();
     test_task_state_changes_when_finished();
+    test_move_other_tasks_forward();
 }
 
 void test_find_slot_to_move_to(){
@@ -93,24 +97,31 @@ void test_move_others(){
     fill_empty_test_plan(&p);
     struct PBS_Task* tasks = &p.tasks[0];
     long order[5] = {0,1,2,3,4};
+
     for( i = 0; i < 5; i++){
         tasks[i].process_id = order [i];
         tasks[i].task_id = order[i];
         tasks[i].slot_owner = tasks[i].task_id;
+        tasks[i].instructions_planned = i;
     }
 
     move_other_tasks_forward(4, 1, &p);
     assert(tasks[0].task_id == 1);
+    assert(tasks[1].task_id == 2);
+    assert(tasks[2].task_id == 3);
     assert(tasks[3].task_id == 4);
-
+    assert(tasks[4].task_id == 0);
 
     for ( i = 0; i < 5; i++){
         tasks[i].task_id = order[i];
     }
 
-    move_other_tasks_forward(5, 2, &p);
+    move_other_tasks_forward(4, 2, &p);
     assert(tasks[0].task_id == 2);
     assert(tasks[1].task_id == 3);
+    assert(tasks[2].task_id == 4);
+    assert(tasks[3].task_id == 0);
+    assert(tasks[4].task_id == 1);
 
     printf("passed test_move_others()\n");
 }
@@ -286,6 +297,12 @@ void test_task_state_changes_when_finished(){
     assert(first_task->state == PLAN_TASK_FINISHED);
 }
 
+void test_move_other_tasks_forward(){
+    struct PBS_Plan p = {0};
+
+}
+
+
 // ### TEST RUN ###
 // creates a plan, runs a couple of function to check if information tracking is working properly
 // then runs the full remaining plan to test if it can without any errors
@@ -353,7 +370,6 @@ void check_run_task_early_time(struct PBS_Plan * p) {
 }
 // t2
 void check_run_task_tm2_early_time(struct PBS_Plan *p){
-    //todo: implement
     struct PBS_Task* t_2 = p->cur_task;
     assert(p->tasks_finished == 2);
     p->cur_task->instructions_real = ((p->cur_task->instructions_planned * (T2_SIGMA / 10) / 100) - 13430718);
@@ -389,6 +405,9 @@ void check_preempt_task(struct PBS_Plan *p){
     p->cur_task->instructions_real = p->cur_task->instructions_planned + PREEMPTION_LIMIT + 1;
     while(p->cur_task->task_id == t4_id){
         pbs_run_timer_tick(p);
+        if (p->tick_counter == 203){
+            printf("del");
+        }
     }
 
     new_addr_t4 = find_task_with_task_id(p, t4_id);

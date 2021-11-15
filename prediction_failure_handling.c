@@ -33,7 +33,7 @@ void preempt_cur_task(struct PBS_Plan* p){
    long insertion_slot;
    struct PBS_Task preempted_tasks[T2_MAX_PREEMPTIONS+1] = {{0}};
     p->cur_task->was_preempted++;
-    insertion_slot= find_slot_to_move_to(p->cur_task->process_id, p);
+    insertion_slot = find_slot_to_move_to(p->cur_task->process_id, p);
     stack_size = get_stack_size_preempted_tasks(preempted_tasks, p);
 
     if (insertion_slot == -2){
@@ -162,7 +162,7 @@ int get_stack_size_preempted_tasks(struct PBS_Task *tasks_to_move, struct PBS_Pl
 EXPORT_SYMBOL(get_stack_size_preempted_tasks);
 
 /**
- *  Moves tasks for to enable preemption
+ * Moves all tasks forward to make room for the preempted task
  * @param insertion_slot
  * @param stack_size
  * @param p

@@ -42,7 +42,6 @@ struct PBS_Process {
 
 
 // PLAN
-
  struct PBS_Plan{
     long num_processes;
     long num_tasks;
@@ -51,7 +50,6 @@ struct PBS_Process {
     struct PBS_Task* finished_tasks;
     struct PBS_Process* cur_process;
     struct PBS_Task* cur_task;
-    struct PBS_Task preempted_tasks[MAX_NUMBER_PROCESSES];
     long index_cur_task;
     long lateness;
     long instructions_retired;
