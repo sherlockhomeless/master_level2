@@ -32,8 +32,10 @@ void preempt_cur_task(struct PBS_Plan* p){
    int stack_size;
    long insertion_slot;
    struct PBS_Task preempted_tasks[T2_MAX_PREEMPTIONS+1] = {{0}};
+   struct PBS_Task preempted_task = *p->cur_task;
+
     p->cur_task->was_preempted++;
-    insertion_slot = find_slot_to_move_to(p->cur_task->process_id, p);
+    insertion_slot = find_slot_to_move_to(p->cur_task->process_id, p); // returns slot index before next task of same PID
     stack_size = get_stack_size_preempted_tasks(preempted_tasks, p);
 
     if (insertion_slot == -2){
@@ -44,10 +46,9 @@ void preempt_cur_task(struct PBS_Plan* p){
     move_preempted_tasks(insertion_slot, stack_size, preempted_tasks, p);
 
     // update
-
     update_cur_task_process(p);
     if(LOG_PBS)
-        printf(KERN_WARNING "[PBS_preempt_cur_task]%ld: %d Tasks where preempted and moved into slot %ld before PBS_Task%ld\n", p->tick_counter, stack_size,
+        printf(KERN_INFO "[PBS_preempt_cur_task]%ld: Task %ld was preempted and moved into slot %ld before Task %ld\n", p->tick_counter, stack_size,
                insertion_slot , p->tasks[insertion_slot+1].task_id);
 }
 
@@ -64,10 +65,10 @@ void handle_no_preemption_slot_found(struct PBS_Plan *p) {//fixme: how to deal w
 EXPORT_SYMBOL(handle_no_preemption_slot_found);
 
 /**
- * Searches the task list of p and tries to find the next slot where a task with target_pid might fit in.
+ * Searches the task list to find the next slot where a task with target_pid might fit in.
  * @param target_pid
  * @param p
- * @return returns index relative to p->tasks where preempted_task can be moved to; returns -2 if no slot can be found
+ * @return returns index of next slot BEFORE other process with same ID; returns -2 if no slot can be found
  */
 long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
     struct PBS_Task* next_slot = p->tasks;
@@ -176,8 +177,8 @@ void move_other_tasks_forward(long insertion_slot, long stack_size, struct PBS_P
         preempted_task_task[i] = *(p->cur_task+i);
     }
     // move other tasks forward
-    for ( i = 0; i < insertion_slot; i++) {
-        p->tasks[i] = p->tasks[i + stack_size];
+    for (i = 0; i < insertion_slot; i++) {
+        *(p->cur_task+i) = *(p->cur_task+i+stack_size);
     }
     // write preempted tasks to insertion slot
     for(i = 0; i < stack_size; i++){

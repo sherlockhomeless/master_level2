@@ -33,7 +33,7 @@ void change_task_state(struct PBS_Task *t, short state) {
     short state_before = t->state;
     t->state = state;
     if (LOG_PBS)
-        printf(KERN_INFO "[change_task_state] changed task %ld from %d to %d\n", t->task_id, state_before, state);
+        printf(KERN_INFO "[change_task_state] changed Task %ld from state %d to %d\n", t->task_id, state_before, state);
 }
 EXPORT_SYMBOL(change_task_state);
 

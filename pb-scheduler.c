@@ -71,10 +71,10 @@ void schedule_task_finished(struct PBS_Plan *p){
     if ( check_tm2_task(p)){
         signal_tm2(p);
         if (LOG_PBS)
-            printf(KERN_WARNING "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished early\n",p->tick_counter, p->cur_task->task_id);
+            printf(KERN_WARNING "[PBS_schedule_task_finished]%ld: Task %ld finished early\n",p->tick_counter, p->cur_task->task_id);
     } else {
         if (LOG_PBS)
-            printf(KERN_INFO "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
+            printf(KERN_INFO "[PBS_schedule_task_finished]%ld: Task %ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
                    p->cur_task->instructions_planned, p->cur_task->instructions_real, p->cur_task->instructions_retired_slot);
     }
 
