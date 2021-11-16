@@ -137,10 +137,10 @@ void switch_task(struct PBS_Plan* p){
     p->tasks_finished++;
     p->index_cur_task++;
     p->cur_task++;
+    update_cur_process(p);
     if (p->cur_task->task_id == -1){
         handle_free_slot(p);
     }
-    update_cur_process(p);
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_switch_task]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
 }
@@ -169,7 +169,6 @@ void handle_free_slot(struct PBS_Plan* p){
     struct PBS_Task* free_slot;
 
     assert(p->cur_task->task_id == -1);
-    assert(p->cur_process->process_id == -1);
     if (LOG_PBS)
         printf(KERN_INFO "[PBS_handle_free_slot]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
 

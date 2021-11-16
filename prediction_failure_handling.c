@@ -42,7 +42,7 @@ void preempt_cur_task(struct PBS_Plan* p){
         handle_no_preemption_slot_found(p);
         return;
     }
-    move_other_tasks_forward(insertion_slot, stack_size, p);
+    adapt_plan_to_preemption(insertion_slot, stack_size, p);
     move_preempted_tasks(insertion_slot, stack_size, preempted_tasks, p);
 
     // update
@@ -168,7 +168,7 @@ EXPORT_SYMBOL(get_stack_size_preempted_tasks);
  * @param stack_size
  * @param p
  */
-void move_other_tasks_forward(long insertion_slot, long stack_size, struct PBS_Plan *p) {
+void adapt_plan_to_preemption(long insertion_slot, long stack_size, struct PBS_Plan *p) {
     // move other tasks forwards
     int i;
     struct PBS_Task preempted_task_task [stack_size];
@@ -182,12 +182,11 @@ void move_other_tasks_forward(long insertion_slot, long stack_size, struct PBS_P
     }
     // write preempted tasks to insertion slot
     for(i = 0; i < stack_size; i++){
-        p->tasks[insertion_slot + i] = preempted_task_task[i];
+        p->tasks[insertion_slot - stack_size + i + 1] = preempted_task_task[i]; // lol, sorry
     }
 
 }
-
-EXPORT_SYMBOL(move_other_tasks_forward);
+EXPORT_SYMBOL(adapt_plan_to_preemption);
 
 
 

@@ -38,7 +38,6 @@ void check_signal_t2_task(struct PBS_Plan *plan);
 // ### UNIT TESTS ####
 void run_unit_tests();
 void test_find_slot_to_move_to();
-void test_move_others();
 void test_insert_preempted_tasks();
 void test_task_moving();
 void test_handle_unallocated();
@@ -61,7 +60,6 @@ int main(){
 // #### UNIT TESTS ####
 void run_unit_tests(){
     test_find_slot_to_move_to();
-    test_move_others();
     test_task_moving();
     test_find_suitable_task();
     test_move_other_tasks_forward();
@@ -90,41 +88,6 @@ void test_find_slot_to_move_to(){
     assert(index == 3);
 
     printf("passed test_find_slot_to_move_to()\n");
-}
-
-void test_move_others(){
-    int i;
-    struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
-    struct PBS_Task* tasks = &p.tasks[0];
-    long order[5] = {0,1,2,3,4};
-
-    for( i = 0; i < 5; i++){
-        tasks[i].process_id = order [i];
-        tasks[i].task_id = order[i];
-        tasks[i].slot_owner = tasks[i].task_id;
-        tasks[i].instructions_planned = 100;
-    }
-
-    move_other_tasks_forward(4, 1, &p);
-    assert(tasks[0].task_id == 1);
-    assert(tasks[1].task_id == 2);
-    assert(tasks[2].task_id == 3);
-    assert(tasks[3].task_id == 4);
-    assert(tasks[4].task_id == 0);
-
-    for ( i = 0; i < 5; i++){
-        tasks[i].task_id = order[i];
-    }
-
-    move_other_tasks_forward(3, 2, &p);
-    assert(tasks[0].task_id == 2);
-    assert(tasks[1].task_id == 3);
-    assert(tasks[2].task_id == 4);
-    assert(tasks[3].task_id == 0);
-    assert(tasks[4].task_id == 1);
-
-    printf("passed test_move_others()\n");
 }
 
 void test_task_moving(){
@@ -162,7 +125,7 @@ void test_insert_preempted_tasks() {
 }
 
 void test_preempt_cur_task(){
-    struct PBS_Plan p ={0};
+    struct PBS_Plan p = {0};
     fill_empty_test_plan(&p);
     struct PBS_Task t;
 
@@ -195,10 +158,36 @@ void test_preempt_cur_task(){
 
 
     /**
-  * Plan: (TID/PID): (0,0), (1,1), (2,2), (3,3), (4,0)
-  * After Preemption: (1,1), (2,2), (3,3), (0,0), (4,0)
+  * Plan: (TID/PID): (0,0), (1,0), (2,2), (3,3), (4,0)
+  * After Preemption: (2,2), (3,3), (0,0), (1,0), (4,0)
   */
 
+    t = create_task(0,0,0,0);
+    p.tasks[0] = t;
+    p.tasks[0].slot_owner = 1;
+    t = create_task(1,0,1,1);
+    p.tasks[1] = t;
+    p.tasks[1].slot_owner = 1;
+    p.processes[1].process_id = 1;
+    t = create_task(2,2,2,2);
+    p.tasks[2] = t;
+    p.processes[2].process_id = 2;
+    t = create_task(3,3,3,3);
+    p.tasks[3] = t;
+    t = create_task(4,0, 4, 4);
+    p.tasks[4] = t;
+
+    preempt_cur_task(&p);
+
+    assert(p.tasks[0].task_id == 2);
+    assert(p.tasks[1].task_id == 3);
+    assert(p.tasks[2].task_id == 0);
+    assert(p.tasks[3].task_id == 1);
+    assert(p.tasks[4].task_id == 4);
+    assert(p.cur_task->task_id == 2);
+    assert(p.cur_process->process_id == 2);
+
+    printf("passed test_preempt_cur_task()\n");
 }
 
 void test_find_next_task_for_all_processes(){
