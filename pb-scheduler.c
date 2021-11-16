@@ -140,7 +140,7 @@ void switch_task(struct PBS_Plan* p){
     if (p->cur_task->task_id == -1){
         handle_free_slot(p);
     }
-    update_cur_task_process(p);
+    update_cur_process(p);
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_switch_task]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
 }
@@ -177,7 +177,7 @@ void handle_free_slot(struct PBS_Plan* p){
     free_slot = p->tasks;
     p->index_cur_task++;
     p->cur_task++;
-    update_cur_task_process(p);
+    update_cur_process(p);
     update_retired_instructions(- free_slot->instructions_planned, p);
     lateness_node_after = p->lateness;
     assert(lateness_node_before > lateness_node_after);

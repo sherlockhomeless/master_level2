@@ -46,10 +46,10 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
 EXPORT_SYMBOL(update_retired_instructions);
 
 /**
- * Updates the pointer cur_task & cur_process to reflect current state
+ * Updates cur_process to reflect current state
  * @param p
  */
-void update_cur_task_process(struct PBS_Plan *p) {
+void update_cur_process(struct PBS_Plan *p) {
     change_task_state(p->cur_task, PLAN_TASK_RUNNING);
     if (p->cur_task->task_id != -1)
         p->cur_process = &p->processes[p->cur_task->process_id];

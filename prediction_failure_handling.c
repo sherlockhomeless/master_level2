@@ -46,7 +46,7 @@ void preempt_cur_task(struct PBS_Plan* p){
     move_preempted_tasks(insertion_slot, stack_size, preempted_tasks, p);
 
     // update
-    update_cur_task_process(p);
+    update_cur_process(p);
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_preempt_cur_task]%ld: Task %ld was preempted and moved into slot %ld before Task %ld\n", p->tick_counter, stack_size,
                insertion_slot , p->tasks[insertion_slot+1].task_id);

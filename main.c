@@ -175,6 +175,7 @@ void test_preempt_cur_task(){
     p.tasks[0] = t;
     t = create_task(1,1,1,1);
     p.tasks[1] = t;
+    p.processes[1].process_id = 1;
     t = create_task(2,2,2,2);
     p.tasks[2] = t;
     t = create_task(3,3,3,3);
@@ -191,6 +192,12 @@ void test_preempt_cur_task(){
     assert(p.tasks[4].task_id == 4);
     assert(p.cur_task->task_id == 1);
     assert(p.cur_process->process_id == 1);
+
+
+    /**
+  * Plan: (TID/PID): (0,0), (1,1), (2,2), (3,3), (4,0)
+  * After Preemption: (1,1), (2,2), (3,3), (0,0), (4,0)
+  */
 
 }
 

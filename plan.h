@@ -11,7 +11,7 @@
 // --- main interface ---
 struct PBS_Plan* parse_plan(char*,struct PBS_Plan*);
 void update_retired_instructions(long instructions_retired,struct PBS_Plan *p);
-void update_cur_task_process(struct PBS_Plan*);
+void update_cur_process(struct PBS_Plan *p);
 
 // --- helper functions ---
 struct PBS_Task* find_task_with_task_id(struct PBS_Plan* , long);
