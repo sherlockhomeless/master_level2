@@ -18,6 +18,7 @@
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
 #include "prediction_failure_signaling.h"
+#include "config.h"
 
 const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
 const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
@@ -73,7 +74,7 @@ void run_unit_tests(){
 void test_find_slot_to_move_to(){
     int i;
     struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
+    get_plan(&p);
     struct PBS_Process processes [MAX_NUMBER_PROCESSES];
 
     long order[5] = {0,1,2,3,0};
@@ -103,7 +104,7 @@ void test_task_moving(){
 void test_insert_preempted_tasks() {
     int i;
     struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
+    get_plan(&p);
     struct PBS_Task* tasks = &p.tasks[0];
 
     long order[5] = {0,1,2,3,4};
@@ -125,7 +126,7 @@ void test_insert_preempted_tasks() {
 
 void test_preempt_cur_task(){
     struct PBS_Plan p = {0};
-    fill_empty_test_plan(&p);
+    get_plan(&p);
     struct PBS_Task t;
 
     /**
@@ -271,7 +272,7 @@ void test_handle_unallocated(){
     struct PBS_Plan p = {0};
     struct PBS_Task* tasks = &p.tasks[0];
     struct PBS_Task cur_t;
-    fill_empty_test_plan(&p);
+    get_plan(&p);
 
 
     // unallocated slot
@@ -328,7 +329,7 @@ void test_task_state_changes_when_finished(){
 
 void test_reschedule(){
     struct PBS_Plan p;
-    fill_empty_test_plan(&p);
+    get_plan(&p);
 
     struct PBS_Task t;
 
@@ -343,14 +344,12 @@ void test_reschedule(){
     t = create_task(2,0,1000,1000);
     p.tasks[2] = t;
 
+    p.tasks[3].task_id = -2;
     reschedule(&p, STRETCH_SIGNAL, 0);
 
-    assert(p.tasks[0].instructions_planned == 100 * STRETCH_CONSTANT);
+    assert(p.tasks[0].instructions_planned == (100 * STRETCH_CONSTANT)/100);
     assert(p.tasks[1].instructions_planned == 100);
-    assert(p.tasks[2].instructions_planned == 1000 * STRETCH_CONSTANT);
-
-
-
+    assert(p.tasks[2].instructions_planned == (1000 * STRETCH_CONSTANT)/100);
 }
 
 
@@ -364,7 +363,7 @@ int test_run(){
     struct PBS_Task* cur_task;
     struct PBS_Plan plan = {0};
     struct PBS_Plan* plan_ptr = &plan;
-    fill_empty_test_plan(plan_ptr);
+    get_plan(plan_ptr);
     test_plan_parsing(plan_ptr);
     check_thresholds(plan_ptr);
     check_run_task_on_time(plan_ptr); // finish t0

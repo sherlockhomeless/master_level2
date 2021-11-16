@@ -99,7 +99,7 @@ void change_plan_state(struct PBS_Plan* p, short state){
         printf(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
 }
 
-void fill_empty_test_plan(struct PBS_Plan* p){
+void get_plan(struct PBS_Plan* p){
     int i;
     p->cur_task = &p->tasks[0];
     p->finished_tasks = &p->tasks[0];
@@ -107,6 +107,7 @@ void fill_empty_test_plan(struct PBS_Plan* p){
     for (i = 0; i < MAX_NUMBER_TASKS_IN_PLAN; i++) {
         p->tasks[i] = create_task(i % 3, i, i, i);
     }
+    p->tasks[MAX_NUMBER_TASKS_IN_PLAN-1].task_id = -2;
 }
 
 

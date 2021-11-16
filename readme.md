@@ -7,4 +7,3 @@ This repository also contains defintions in **pbs_entities.h** and **config.h** 
 ## Run
 
 To run the program on userland, the variable `PLAN_PATH` needs to be set to the path located at `test/plan.log`
-

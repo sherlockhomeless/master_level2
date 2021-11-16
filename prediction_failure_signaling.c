@@ -60,16 +60,12 @@ EXPORT_SYMBOL(signal_tm2);
  */
 void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
     // find out for what tasks rescheduling has to occur
-    long instructions_rescheduling = RESCHEDULE_TIME * INS_PER_TICK;
     long new_length;
     long stretch_factor;
     long task_counter = 0;
 
     struct PBS_Task* cur_task = p->cur_task;
-    while (instructions_rescheduling > 0){
-        instructions_rescheduling -= cur_task->instructions_real;
-        cur_task++;
-    }
+
 
     // apply stretch
     if(signal == STRETCH_SIGNAL)
@@ -77,7 +73,7 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
     else
         stretch_factor = SHRINK_CONSTANT;
 
-    while (cur_task->process_id != -2){
+    while (cur_task->task_id != -2){
         if (cur_task->process_id == target_pid) {
             new_length = (cur_task->instructions_planned * stretch_factor) / 100;
             cur_task->instructions_planned = new_length;

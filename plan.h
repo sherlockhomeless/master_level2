@@ -22,5 +22,5 @@ void replace_unallocated_slot_in_plan(struct PBS_Task *replacement_task, struct 
 
 
 // --- for testing ---
-void fill_empty_test_plan(struct PBS_Plan* p);
+void get_plan(struct PBS_Plan* p);
 #endif //LEVEL2_PLAN_H
