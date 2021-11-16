@@ -30,7 +30,7 @@ void signal_t2(struct PBS_Plan* p){
 
     add_signal(sig);
 
-    reschedule(p, STRETCH_SIGNAL);
+    reschedule(p, STRETCH_SIGNAL, p->cur_process->process_id);
 }
 
 EXPORT_SYMBOL(signal_t2);
@@ -49,7 +49,7 @@ void signal_tm2(struct PBS_Plan* p){
 
     add_signal(sig);
 
-    reschedule(p, SHRINK_SIGNAL);
+    reschedule(p, SHRINK_SIGNAL, 0);
 }
 
 EXPORT_SYMBOL(signal_tm2);
@@ -58,13 +58,12 @@ EXPORT_SYMBOL(signal_tm2);
  * Simulates a rescheduling from the scheduling component
  * @param p
  */
-void reschedule(struct PBS_Plan* p, short signal){
+void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
     // find out for what tasks rescheduling has to occur
     long instructions_rescheduling = RESCHEDULE_TIME * INS_PER_TICK;
     long new_length;
     long stretch_factor;
     long task_counter = 0;
-    long target_pid = p->cur_process->process_id;
 
     struct PBS_Task* cur_task = p->cur_task;
     while (instructions_rescheduling > 0){

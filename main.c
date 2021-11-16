@@ -2,10 +2,9 @@
 // Created by ml on 23.03.21.
 //
 /**
- * todo: nice_to_have_
+ * todo: Shrink tasks
  */
 
- // todo: more assertsbuffer=buffer=
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -18,7 +17,7 @@
 #include "pb-scheduler.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
-
+#include "prediction_failure_signaling.h"
 
 const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
 const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
@@ -45,8 +44,8 @@ void test_find_next_task_for_all_processes();
 void test_find_suitable_task();
 void test_replace_unallocated_slot_in_plan();
 void test_task_state_changes_when_finished();
-void test_move_other_tasks_forward();
 void test_preempt_cur_task();
+void test_reschedule();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -62,13 +61,13 @@ void run_unit_tests(){
     test_find_slot_to_move_to();
     test_task_moving();
     test_find_suitable_task();
-    test_move_other_tasks_forward();
     test_insert_preempted_tasks();
     test_preempt_cur_task();
     test_find_next_task_for_all_processes();
     test_replace_unallocated_slot_in_plan();
     test_handle_unallocated();
     test_task_state_changes_when_finished();
+    test_reschedule();
 }
 
 void test_find_slot_to_move_to(){
@@ -327,8 +326,30 @@ void test_task_state_changes_when_finished(){
     assert(first_task->state == PLAN_TASK_FINISHED);
 }
 
-void test_move_other_tasks_forward(){
-    struct PBS_Plan p = {0};
+void test_reschedule(){
+    struct PBS_Plan p;
+    fill_empty_test_plan(&p);
+
+    struct PBS_Task t;
+
+    /**
+     * task/pid/len: 0,0,100; 1,1,100; 2,0,1000;
+     */
+
+    t = create_task(0,0, 100, 100);
+    p.tasks[0] = t;
+    t = create_task(1,1,100,100);
+    p.tasks[1] = t;
+    t = create_task(2,0,1000,1000);
+    p.tasks[2] = t;
+
+    reschedule(&p, STRETCH_SIGNAL, 0);
+
+    assert(p.tasks[0].instructions_planned == 100 * STRETCH_CONSTANT);
+    assert(p.tasks[1].instructions_planned == 100);
+    assert(p.tasks[2].instructions_planned == 1000 * STRETCH_CONSTANT);
+
+
 
 }
 
@@ -353,6 +374,9 @@ int test_run(){
     check_preempt_task(plan_ptr);
     while(plan_ptr->state != PLAN_FINISHED) {
         pbs_run_timer_tick(plan_ptr);
+        if (plan.tick_counter == 15170){
+            printf("del");
+        }
     }
 
     for ( i = 0; i < 3; i++){
