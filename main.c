@@ -371,18 +371,8 @@ int test_run(){
     check_run_task_tm2_early_time(plan_ptr); // finish t2
     check_run_task_late_time(plan_ptr);
     check_preempt_task(plan_ptr);
-    while(plan_ptr->state != PLAN_FINISHED) {
+    while(plan_ptr->cur_task->task_id != -2) {
         pbs_run_timer_tick(plan_ptr);
-        if (plan.tick_counter == 15170){
-            printf("del");
-        }
-    }
-
-    for ( i = 0; i < 3; i++){
-      /*  sig = get_pbs_signal(i);
-        //FIXME: Signals are trash
-        printf("signal: tick=%ld type=%d, task=%ld, process=%ld\n",
-               sig->tick, sig->type_signal, sig->task_id, sig->process_id);*/
     }
     return 0;
 }
@@ -431,8 +421,6 @@ void check_run_task_tm2_early_time(struct PBS_Plan *p){
         assert(p->cur_task->task_id == 2);
         pbs_run_timer_tick(p);
     }
-    assert(p->state == SIGNALED);
-
 }
 //t3
 void check_run_task_late_time(struct PBS_Plan *p){

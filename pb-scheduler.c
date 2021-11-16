@@ -40,12 +40,11 @@ void pbs_run_timer_tick(struct PBS_Plan *p) {
     assert(p->num_tasks < 400);
     if (p->cur_task->task_id == -2){
         if (LOG_PBS)
-            printf(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);
-        change_plan_state(p, PLAN_FINISHED);
+            printf(KERN_INFO "[pbs_run_timer_tick]%ld FINISHED\n", p->tick_counter);
         return;
     }
 
-    printf(KERN_INFO "[PBS_pbs_handle_prediction_failure]%ld: ran tick, cur_task=%ld\n", p->tick_counter, p->cur_task->task_id);
+    printf(KERN_INFO "[pbs_run_timer_tick]%ld: ran tick, cur_task=%ld\n", p->tick_counter, p->cur_task->task_id);
     retired_instructions = get_retired_instructions();
     update_retired_instructions(retired_instructions, p);
 

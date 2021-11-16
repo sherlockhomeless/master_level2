@@ -18,7 +18,6 @@ void add_signal(struct PredictionFailureSignal sig);
 
 void signal_t2(struct PBS_Plan* p){
     struct PredictionFailureSignal sig;
-    change_plan_state(p, SIGNALED);
     if (LOG_PBS)
         printf(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
     p->stress = STRESS_RESET;
@@ -37,7 +36,6 @@ EXPORT_SYMBOL(signal_t2);
 
 void signal_tm2(struct PBS_Plan* p){
     struct PredictionFailureSignal  sig;
-    change_plan_state(p, SIGNALED);
     if (LOG_PBS)
         printf(KERN_ALERT"[PBS_signal_tm2]%ld: signaled prediction failure for task %ld\n",p->tick_counter, p->cur_task->task_id);
     p->stress = STRESS_RESET;

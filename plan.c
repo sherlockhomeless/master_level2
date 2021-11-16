@@ -93,12 +93,6 @@ void update_node_lateness(long instructions, struct PBS_Plan* p){
     p->lateness += instructions;
 }
 
-void change_plan_state(struct PBS_Plan* p, short state){
-    p->state = state;
-    if (LOG_PBS)
-        printf(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
-}
-
 void get_plan(struct PBS_Plan* p){
     int i;
     p->cur_task = &p->tasks[0];
