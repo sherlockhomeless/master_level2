@@ -27,12 +27,14 @@ struct PBS_Plan* parse_plan(char* plan_s, struct PBS_Plan* plan){
     // parse meta-section until we find ';;;'
     cur_position = parse_meta(plan_s, cur_position, plan);
     parse_tasks(plan_s, cur_position, plan);
+
     plan->index_cur_task = 0;
     plan->tasks_finished = 0;
     plan->cur_task = plan->tasks;
     plan->finished_tasks = plan->tasks;
     plan->cur_process = &plan->processes[plan->cur_task->process_id];
     plan->tick_counter = 0;
+    plan->instructions_planned = calculate_length_plan(plan);
     return plan;
 }
 
@@ -189,3 +191,4 @@ long parse_next_number(char **str_ptr) {
     long res = strtoll(start, str_ptr, 10);
     return res;
 }
+

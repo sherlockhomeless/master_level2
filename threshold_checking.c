@@ -16,6 +16,7 @@
 long calculate_t1(struct PBS_Task*);
 long calculate_t2_task( struct PBS_Plan *p);
 
+/* --- T1 ----*/
 long calculate_t1(struct PBS_Task* task){
     long t1_relative, t1_minimum, t1_maximum, t1;
     t1_minimum = task->instructions_planned + T1_NO_PREEMPTION;
@@ -33,7 +34,6 @@ long calculate_t1(struct PBS_Task* task){
     }
     return t1;
 }
-
 EXPORT_SYMBOL(calculate_t1);
 
 short check_t1(struct PBS_Plan* p) {
@@ -59,6 +59,7 @@ short check_t1(struct PBS_Plan* p) {
 }
 EXPORT_SYMBOL(check_t1);
 
+/* --- T2 ----*/
 long calculate_t2_task(struct PBS_Plan *p) {
     struct PBS_Task* task = p->cur_task;
     long t2_task, t2_task_min, t2_task_relative, t1;
@@ -93,29 +94,6 @@ short check_t2_task( struct PBS_Plan *p) {
 EXPORT_SYMBOL(check_t2_task);
 
 /**
- * Check tm2, a prediction failure condition related to significant earliness
- * @param p
- * @return
- */
-short check_tm2_task(struct PBS_Plan* p){
-    struct PBS_Task* task = p->cur_task;
-    long plan_length = task->instructions_planned;
-    long tm2_task = (plan_length * T2_SIGMA / 10) / 100;
-
-    if (!TM2_TASK_ENABLED) {
-        return OK;
-    }
-    assert(tm2_task < plan_length);
-
-    if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED)
-        return TM2;
-    else
-        return OK;
-}
-
-EXPORT_SYMBOL(check_tm2_task);
-
-/**
  * Implements the 2-level check for t2_process
  * @param p
  * @return
@@ -129,6 +107,8 @@ short check_t2_process(struct PBS_Plan* p) {
         capacity_buffer = calculate_capacity_buffer(cur_process);
         if(cur_process->lateness > capacity_buffer){
             allowed_plan_buffer = calculate_allowed_plan_buffer(cur_process, p);
+            allowed_plan_buffer = allowed_plan_buffer + (p->stress * T2_STRESS_GAIN) - RESCHEDULE_TIME;
+            allowed_plan_buffer = allowed_plan_buffer < T2_PROCESS_MINIMUM ? T2_PROCESS_MINIMUM : allowed_plan_buffer;
             if (cur_process->lateness > allowed_plan_buffer){
                 return T2;
             } else {
@@ -158,30 +138,60 @@ long calculate_allowed_plan_buffer(struct PBS_Process* process, struct PBS_Plan*
     long allowed_plan_buffer = (cleared_plan_buffer * process_completion)/100;
     return allowed_plan_buffer;
 }
-
-
 EXPORT_SYMBOL(check_t2_process);
 
-short check_tm2_process(struct PBS_Plan* p) {
-    if (!TM2_PROCESS_ENABLED)
-        return OK;
-    return OK;
-}
-EXPORT_SYMBOL(check_tm2_process);
-
-
 short check_t2_node(struct PBS_Plan* plan){
+    long t2_node = calculate_t2_node(plan);
     if (!T2_NODE_ENABLED)
         return OK;
-    return OK;
-}
 
+    if (plan->lateness > t2_node){
+        return T2;
+    } else {
+        return OK;
+    }
+}
 EXPORT_SYMBOL(check_t2_node);
+
+
+long calculate_t2_node(struct PBS_Plan* p){
+    long t2_node_min = p->num_processes * T2_PROCESS_MINIMUM;
+    long t2_node_relative = ((p->instructions_planned * T2_NODE_LATENESS)/100) + (p->stress * T2_STRESS_GAIN) - RESCHEDULE_TIME;
+    long t2_node = t2_node_relative < t2_node_min ? t2_node_min : t2_node_relative;
+    return t2_node;
+}
+EXPORT_SYMBOL(calculate_t2_node);
+
+/* --- T-2 ----*/
+/**
+ * Check tm2, a prediction failure condition related to significant earliness
+ * @param p
+ * @return
+ */
+short check_tm2_task(struct PBS_Plan* p){
+    struct PBS_Task* task = p->cur_task;
+    long plan_length = task->instructions_planned;
+    long tm2_task = (plan_length * T2_SIGMA / 10) / 100;
+
+    if (!TM2_TASK_ENABLED) {
+        return OK;
+    }
+    assert(tm2_task < plan_length);
+
+    if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED)
+        return TM2;
+    else
+        return OK;
+}
+EXPORT_SYMBOL(check_tm2_task);
 
 short check_tm2_node(struct PBS_Plan* plan){
     if (!TM2_NODE_ENABLED)
         return OK;
     return OK;
 }
-
 EXPORT_SYMBOL(check_tm2_node);
+
+short check_t2_preemptions(struct PBS_Plan*){
+    
+}

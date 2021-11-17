@@ -139,3 +139,16 @@ void replace_unallocated_slot_in_plan(struct PBS_Task* replacement_task, struct 
 }
 EXPORT_SYMBOL(replace_unallocated_slot_in_plan);
 
+
+long calculate_length_plan(struct PBS_Plan* p) {
+    long sum = 0;
+    struct PBS_Task *cur_task = &p->tasks[0];
+
+    while (cur_task->task_id != -2) {
+        sum += cur_task->instructions_planned;
+        cur_task++;
+    }
+    return sum;
+}
+
+EXPORT_SYMBOL(calculate_length_plan);

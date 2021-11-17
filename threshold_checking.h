@@ -20,8 +20,9 @@ short check_tm2_process(struct PBS_Plan *);
 long calculate_capacity_buffer(struct PBS_Process *process);
 long calculate_allowed_plan_buffer(struct PBS_Process *process, struct PBS_Plan *p);
 
+long calculate_t2_node(struct PBS_Plan*);
 short check_t2_node(struct PBS_Plan*);
 short check_tm2_node(struct PBS_Plan*);
 
-
+short check_t2_preemptions(struct PBS_Plan*);
 

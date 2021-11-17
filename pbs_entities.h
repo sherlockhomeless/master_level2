@@ -53,6 +53,7 @@ struct PBS_Process {
     long index_cur_task;
     long lateness;
     long instructions_retired;
+    long instructions_planned;
     short state;
     long tick_counter;
     long tasks_finished;
