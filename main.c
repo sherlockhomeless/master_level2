@@ -20,7 +20,7 @@
 #include "prediction_failure_signaling.h"
 #include "config.h"
 
-const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
+const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan2.log";
 const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
 
 void read_plan(FILE*, char* , long);
@@ -47,6 +47,7 @@ void test_replace_unallocated_slot_in_plan();
 void test_task_state_changes_when_finished();
 void test_preempt_cur_task();
 void test_reschedule();
+void test_signal_t2();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -69,6 +70,7 @@ void run_unit_tests(){
     test_handle_unallocated();
     test_task_state_changes_when_finished();
     test_reschedule();
+    test_signal_t2();
 }
 
 void test_find_slot_to_move_to(){
@@ -274,7 +276,6 @@ void test_handle_unallocated(){
     struct PBS_Task cur_t;
     get_plan(&p);
 
-
     // unallocated slot
     cur_t = create_task(-1, -1, 100, 100);
     p.tasks[0] = cur_t;
@@ -352,7 +353,9 @@ void test_reschedule(){
     assert(p.tasks[2].instructions_planned == (1000 * STRETCH_CONSTANT)/100);
 }
 
+void test_signal_t2(){
 
+}
 // ### TEST RUN ###
 // creates a plan, runs a couple of function to check if information tracking is working properly
 // then runs the full remaining plan to test if it can without any errors
@@ -374,9 +377,14 @@ int test_run(){
     while(plan_ptr->cur_task->task_id != -2) {
         pbs_run_timer_tick(plan_ptr);
     }
+
+    print_signals();
     return 0;
 }
 
+/**
+ *
+ */
 void check_run_task_on_time(struct PBS_Plan* plan){
     struct PBS_Task* first_task;
     struct PBS_Process* first_process;

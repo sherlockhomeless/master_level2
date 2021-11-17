@@ -17,4 +17,5 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid);
 struct PredictionFailureSignal* get_pbs_signal(int pick_signal);
 void signal_t2(struct PBS_Plan* p);
 void signal_tm2(struct PBS_Plan* p);
+void print_signals();
 #endif //LEVEL2_PREDICTION_FAILURE_SIGNALING_H

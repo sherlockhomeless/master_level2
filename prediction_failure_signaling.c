@@ -11,15 +11,14 @@
 #include "prediction_failure_handling.h"
 #include "prediction_failure_signaling.h"
 
-struct PredictionFailureSignal lastSignals [SIZE_SIG_BUFFER]; // ring buffer to track latest signals
+struct PredictionFailureSignal lastSignals [SIZE_SIG_BUFFER] = {0}; // ring buffer to track latest signals
 static int cur_sig_buffer_position;
 void add_signal(struct PredictionFailureSignal sig);
 
 
 void signal_t2(struct PBS_Plan* p){
     struct PredictionFailureSignal sig;
-    if (LOG_PBS)
-        printf(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
+
     p->stress = STRESS_RESET;
 
     sig.task_id = p->cur_task->task_id,
@@ -30,8 +29,9 @@ void signal_t2(struct PBS_Plan* p){
     add_signal(sig);
 
     reschedule(p, STRETCH_SIGNAL, p->cur_process->process_id);
+    if (LOG_PBS)
+        printf(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
 }
-
 EXPORT_SYMBOL(signal_t2);
 
 void signal_tm2(struct PBS_Plan* p){
@@ -49,7 +49,6 @@ void signal_tm2(struct PBS_Plan* p){
 
     reschedule(p, SHRINK_SIGNAL, 0);
 }
-
 EXPORT_SYMBOL(signal_tm2);
 
 /**
@@ -82,23 +81,17 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
     if (LOG_PBS)
         printf(KERN_DEBUG "[PBS_reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
 }
-
 EXPORT_SYMBOL(reschedule);
 
 
-/**
- *
- * @param sig
- */
 void add_signal(struct PredictionFailureSignal sig){
-
     cur_sig_buffer_position++;
     if (cur_sig_buffer_position == 100)
         cur_sig_buffer_position = 0;
     lastSignals[cur_sig_buffer_position] = sig;
 }
-
 EXPORT_SYMBOL(add_signal);
+
 /**
  * Returns latest signals in lastSignals
  * @param pick_signal Index of latest signal, 0 -> latest signal, 1 2nd latest signal,...
@@ -116,6 +109,18 @@ struct PredictionFailureSignal* get_pbs_signal(int pick_signal){
     return &lastSignals[target_index];
 }
 EXPORT_SYMBOL(get_pbs_signal);
+
+void print_signals(){
+    int i = 0;
+    struct PredictionFailureSignal sig;
+
+    while( i < SIZE_SIG_BUFFER && sig.tick != 0){
+        sig = lastSignals[i];
+        printf("[print_signals]: Signal received= tid: %ld, pid: %ld, tick: %ld, type: %d",
+               sig.task_id, sig.process_id, sig.tick, sig.type_signal);
+        i++;
+    }
+}
 
 void receive_new_plan(struct PBS_Plan* p){
     if (LOG_PBS)
