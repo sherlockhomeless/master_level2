@@ -1,6 +1,7 @@
 //
 // Created by ml on 25.03.21.
 //
+#include <assert.h>
 #include "kernel_dummies.h"
 
 #include "pbs_entities.h"
@@ -42,3 +43,17 @@ struct PBS_Process create_process(long pid, long num_tasks, long buffer, long le
 
 }
 EXPORT_SYMBOL(create_process);
+
+/**
+ * @param process
+ * @return an integer between 0 and 100;
+ */
+int calculate_process_completion(struct PBS_Process* process){
+    int completion;
+    long process_completion = (process->instructions_retired*100) / process->length_plan;
+    completion = process_completion > 100 ? 100 : (int) process_completion;
+    assert(process_completion >= 0);
+
+    return completion;
+}
+EXPORT_SYMBOL(calculate_process_completion);

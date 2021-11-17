@@ -8,6 +8,7 @@
 
 #include "pbs_entities.h"
 #include "plan.h"
+#include "process.h"
 #include "threshold_checking.h"
 #include "config.h"
 
@@ -114,20 +115,48 @@ short check_tm2_task(struct PBS_Plan* p){
 
 EXPORT_SYMBOL(check_tm2_task);
 
+/**
+ * Implements the 2-level check for t2_process
+ * @param p
+ * @return
+ */
 short check_t2_process(struct PBS_Plan* p) {
+    long capacity_buffer, allowed_plan_buffer;
+    struct PBS_Process* cur_process = p->cur_process;
     if (!T2_PROCESS_ENABLED)
         return OK;
     else  {
-    assert(0);
+        capacity_buffer = calculate_capacity_buffer(cur_process);
+        if(cur_process->lateness > capacity_buffer){
+            allowed_plan_buffer = calculate_allowed_plan_buffer(cur_process, p);
+            if (cur_process->lateness > allowed_plan_buffer){
+                return T2;
+            } else {
+                return OK;
+            }
+        } else {
+            return OK;
+        }
     }
 }
+EXPORT_SYMBOL(check_t2_process);
 
-long calculate_capacity_buffer(struct PBS_Process* process, struct PBS_Plan* p){
-    assert(0);
+long calculate_capacity_buffer(struct PBS_Process *process) {
+    long capacity_buffer = process->length_plan * T2_CAPACITY_BUFFER;
+
+    assert(capacity_buffer > process->length_plan);
+
+    return process->length_plan * T2_CAPACITY_BUFFER;
 }
 
-long calculate_plan_buffer(struct PBS_Process* process, struct PBS_Plan* p){
-    assert(0);
+long calculate_allowed_plan_buffer(struct PBS_Process* process, struct PBS_Plan* p){
+    int process_completion = calculate_process_completion(process);
+    long plan_buffer = process->buffer;
+    long capacity_buffer_deadline = (plan_buffer * T2_CAPACITY_BUFFER) - plan_buffer;
+    long capacity_buffer_per_process = capacity_buffer_deadline / p->num_processes;
+    long cleared_plan_buffer = capacity_buffer_per_process * T2_ASSIGNABLE_PLAN_BUFFER;
+    long allowed_plan_buffer = (cleared_plan_buffer * process_completion)/100;
+    return allowed_plan_buffer;
 }
 
 

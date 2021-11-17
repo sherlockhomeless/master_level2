@@ -25,13 +25,12 @@
 #define T2_SIGMA (T1_SIGMA + 50) // percentage as int; max allowed deviation % of a task from its plan
 #define T2_SPACER (T1_MAX_TICKS_OFF * INS_PER_TICK ) // raw number instructions; Distance t1 -> t2_task
 #define T2_TASK_SIGNALING_LIMIT  (PBS_HZ * INS_PER_TICK)// raw number instructions; t2_task max value TODO: Implement
-#define T2_CAPACITY_BUFFER 10 // percentage as int, underestimation of node computational capacity TODO: Implement
-#define ASSIGNABLE_BUFFER 50 // given as integer, floating point not allowed
+#define T2_CAPACITY_BUFFER 110 // percentage as int, underestimation of node computational capacity
+#define T2_ASSIGNABLE_PLAN_BUFFER 50 // Factor that describes what percentage of the buffer may be used up, e.g. 50 with a 1000 buffer means, that only a buffer of 500 may be used before a prediction failure will be send
 #define MINIMUM_USABLE_BUFFER 5//buffer that is usable for very little proces progression
 #define T2_MAX_PREEMPTIONS 5
 #define T2_NODE_CHECK_ENABLED 0
 #define FREE_TIME  10 // Factor that stores stretch happening in plan, e.g. free_time = 110, CPU is 110% faster then assumed by plan
-#define ASSIGNABLE_BUFFER 50 // Factor that describes what percentage of the buffer may be used up, e.g. 50 with a 1000 buffer means, that only a buffer of 500 may be used before a prediction failure will be send
 #define STRESS_RESET (PBS_HZ*30)
 
 // --- RESCHEDULING ---
