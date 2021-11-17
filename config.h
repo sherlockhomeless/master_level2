@@ -8,22 +8,22 @@
 #define ACCURACY 10000
 
 // --- GENERAL ---
-#define PBS_HZ 250
-#define INS_PER_SEC 4000000000
+#define PBS_HZ 100
+#define INS_PER_SEC 1000000000
 #define INS_PER_TICK (INS_PER_SEC/PBS_HZ)
 #define RESCHEDULE_DELAY 30
 #define RESCHEDULE_TIME (PBS_HZ*RESCHEDULE_DELAY)
 
 // --- T1 ---
-#define MAX_TICKS_OFF 20
-#define MIN_TICKS_OFF 2
-#define PREEMPTION_LIMIT MAX_TICKS_OFF * INS_PER_TICK
-#define NO_PREEMPTION MIN_TICKS_OFF * INS_PER_TICK
-#define SIGMA_T1 200L
+#define T1_MAX_TICKS_OFF 10
+#define T1_MIN_TICKS_OFF 2
+#define PREEMPTION_LIMIT T1_MAX_TICKS_OFF * INS_PER_TICK
+#define T1_NO_PREEMPTION T1_MIN_TICKS_OFF * INS_PER_TICK
+#define T1_SIGMA 125
 
 // --- T2 ---
-#define T2_SIGMA 150 // percentage as int; max allowed deviation % of a task from its plan
-#define T2_SPACER (5 * INS_PER_TICK ) // raw number instructions; Distance t1 -> t2_task
+#define T2_SIGMA (T1_SIGMA + 50) // percentage as int; max allowed deviation % of a task from its plan
+#define T2_SPACER (T1_MAX_TICKS_OFF * INS_PER_TICK ) // raw number instructions; Distance t1 -> t2_task
 #define T2_TASK_SIGNALING_LIMIT  (PBS_HZ * INS_PER_TICK)// raw number instructions; t2_task max value TODO: Implement
 #define T2_CAPACITY_BUFFER 10 // percentage as int, underestimation of node computational capacity TODO: Implement
 #define ASSIGNABLE_BUFFER 50 // given as integer, floating point not allowed

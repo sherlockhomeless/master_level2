@@ -14,6 +14,7 @@
 #include "task.h"
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
+#include "prediction_failure_signaling.h"
 #include "config.h"
 
 void schedule_task_finished(struct PBS_Plan*);
@@ -43,8 +44,11 @@ void pbs_run_timer_tick(struct PBS_Plan *p) {
             printf(KERN_INFO "[pbs_run_timer_tick]%ld FINISHED\n", p->tick_counter);
         return;
     }
+        if (LOG_PBS) {
+            printf(KERN_INFO "[pbs_run_timer_tick]%ld: ran tick, cur_task=%ld\n", p->tick_counter,
+                   p->cur_task->task_id);
+        }
 
-    printf(KERN_INFO "[pbs_run_timer_tick]%ld: ran tick, cur_task=%ld\n", p->tick_counter, p->cur_task->task_id);
     retired_instructions = get_retired_instructions();
     update_retired_instructions(retired_instructions, p);
 
@@ -98,13 +102,8 @@ EXPORT_SYMBOL(schedule_task_finished);
  * @param p
  */
 void schedule_timer_tick(struct PBS_Plan *p){
-    long usable_buffer;
-
     // --- check for t2 ---
     if(p->stress <= 0) {
-        usable_buffer = calculate_usable_buffer(FREE_TIME, ASSIGNABLE_BUFFER, p->cur_process->buffer,
-                                                p->cur_process->length_plan,
-                                                p->cur_process->instructions_retired);
         if (check_t2_task(p) ||
             check_t2_process(p) ||
             check_t2_node(p))            {

@@ -47,7 +47,6 @@ void test_replace_unallocated_slot_in_plan();
 void test_task_state_changes_when_finished();
 void test_preempt_cur_task();
 void test_reschedule();
-void test_signal_t2();
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -70,7 +69,6 @@ void run_unit_tests(){
     test_handle_unallocated();
     test_task_state_changes_when_finished();
     test_reschedule();
-    test_signal_t2();
 }
 
 void test_find_slot_to_move_to(){
@@ -353,9 +351,6 @@ void test_reschedule(){
     assert(p.tasks[2].instructions_planned == (1000 * STRETCH_CONSTANT)/100);
 }
 
-void test_signal_t2(){
-
-}
 // ### TEST RUN ###
 // creates a plan, runs a couple of function to check if information tracking is working properly
 // then runs the full remaining plan to test if it can without any errors
@@ -382,9 +377,6 @@ int test_run(){
     return 0;
 }
 
-/**
- *
- */
 void check_run_task_on_time(struct PBS_Plan* plan){
     struct PBS_Task* first_task;
     struct PBS_Process* first_process;
@@ -405,7 +397,6 @@ void check_run_task_on_time(struct PBS_Plan* plan){
 }
 // t1
 void check_run_task_early_time(struct PBS_Plan * p) {
-
     struct PBS_Task* t1_addr = p->cur_task;
     long ticks_start = p->tick_counter;
     long ticks_end;
@@ -464,10 +455,6 @@ void check_preempt_task(struct PBS_Plan *p){
     assert(old_slot_owner != new_slot_owner);
 }
 
-void check_signal_t2_task(struct PBS_Plan *p){
-    //todo: implement
-
-}
 /**
  * Check if Threshold calculation works
  * @param p
@@ -513,7 +500,6 @@ void read_plan(FILE* fp, char* buffer, long length_buffer){
    fclose(fp);
 
 }
-
 
 long get_file_size(FILE* fp){
     fseek(fp, 0, SEEK_END); // seek to end of file

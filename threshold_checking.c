@@ -17,11 +17,11 @@ long calculate_t2_task( struct PBS_Plan *p);
 
 long calculate_t1(struct PBS_Task* task){
     long t1_relative, t1_minimum, t1_maximum, t1;
-    t1_minimum = task->instructions_planned + NO_PREEMPTION;
-    t1_relative = task->instructions_planned * SIGMA_T1;
-    t1_maximum = task->instructions_planned + NO_PREEMPTION;
-    if(0)
-        printf("[t1] task %ld: instructions_planned=%ld, t1_min=%ld, t1_relative=%ld, t1_max=%ld\n", task->task_id,
+    t1_minimum = task->instructions_planned + T1_NO_PREEMPTION;
+    t1_relative = task->instructions_planned * T1_SIGMA;
+    t1_maximum = task->instructions_planned + T1_NO_PREEMPTION;
+    if(LOG_PBS)
+        printf("[calculate_t1] task %ld: instructions_planned=%ld, t1_min=%ld, t1_relative=%ld, t1_max=%ld\n", task->task_id,
                task->instructions_planned, t1_minimum, t1_relative, t1_maximum);
     if (t1_minimum > t1_relative)
         t1_relative = t1_minimum;
@@ -89,13 +89,18 @@ short check_t2_task( struct PBS_Plan *p) {
     else
         return OK;
 }
-
 EXPORT_SYMBOL(check_t2_task);
 
+/**
+ * Check tm2, a prediction failure condition related to significant earliness
+ * @param p
+ * @return
+ */
 short check_tm2_task(struct PBS_Plan* p){
     struct PBS_Task* task = p->cur_task;
     long plan_length = task->instructions_planned;
     long tm2_task = (plan_length * T2_SIGMA / 10) / 100;
+
     if (!TM2_TASK_ENABLED) {
         return OK;
     }
@@ -113,9 +118,18 @@ short check_t2_process(struct PBS_Plan* p) {
     if (!T2_PROCESS_ENABLED)
         return OK;
     else  {
-// TODO!!
+    assert(0);
     }
 }
+
+long calculate_capacity_buffer(struct PBS_Process* process, struct PBS_Plan* p){
+    assert(0);
+}
+
+long calculate_plan_buffer(struct PBS_Process* process, struct PBS_Plan* p){
+    assert(0);
+}
+
 
 EXPORT_SYMBOL(check_t2_process);
 
@@ -124,34 +138,8 @@ short check_tm2_process(struct PBS_Plan* p) {
         return OK;
     return OK;
 }
-
 EXPORT_SYMBOL(check_tm2_process);
 
-/**
- * Calculates the usable_buffer, float-values have to be given as integers because of kernel limitations
- * @param free_time freetime as integer, eg. 10 => 10% free time
- * @param assignable_buffer
- * @param buffer
- * @param length_process_plan
- * @param length_process_finished
- * @return usable_buffer in instructions
- */
-long calculate_usable_buffer(int free_time, int assignable_buffer, long buffer, long length_process_plan, long length_process_finished){
-    long buffer_with_free_time_applied;
-    long available_buffer;
-    long usable_buffer;
-    long process_progress;
-
-    buffer_with_free_time_applied =  (buffer * free_time / 100) ;
-    available_buffer = buffer_with_free_time_applied * assignable_buffer / 100;
-    process_progress = (length_process_finished * ACCURACY) / length_process_plan;
-
-    usable_buffer = available_buffer * process_progress /ACCURACY;
-
-    return usable_buffer;
-}
-
-EXPORT_SYMBOL(calculate_usable_buffer);
 
 short check_t2_node(struct PBS_Plan* plan){
     if (!T2_NODE_ENABLED)
