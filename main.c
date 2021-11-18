@@ -316,6 +316,7 @@ void test_task_state_changes_when_finished(){
     struct PBS_Plan p = {0};
     struct PBS_Task task = create_task(0, 0, INS_PER_TICK, INS_PER_TICK);
     struct PBS_Task* first_task = &p.tasks[0];
+    setup_plan(&p);
     p.tasks[0] = task;
     p.cur_task = &p.tasks[0];
     p.processes[0] = create_process(0,1,10000000, 1000000);

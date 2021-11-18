@@ -69,15 +69,18 @@ EXPORT_SYMBOL(pbs_run_timer_tick);
 void schedule_task_finished(struct PBS_Plan *p){
     long lateness_cur_task;
     long instruction_surplus = p->cur_task->instructions_retired_slot - p->cur_task->instructions_real; // take surplus of instructions attributed to cur_task and remove them
+    short tm2_task_transgressed, tm2_node_transgressed;
+    tm2_task_transgressed = check_tm2_task(p);
+    tm2_node_transgressed = check_tm2_node(p);
 
     // --- check t-2 ---
-    if ( check_tm2_task(p) || check_tm2_node(p)){
+    if ( tm2_task_transgressed || tm2_node_transgressed){
         signal_tm2(p);
         if (LOG_PBS)
-            printf(KERN_WARNING "[PBS_schedule_task_finished]%ld: Task %ld finished early\n",p->tick_counter, p->cur_task->task_id);
+            printf(KERN_WARNING "[schedule_task_finished]%ld: Task %ld finished early\n",p->tick_counter, p->cur_task->task_id);
     } else {
         if (LOG_PBS)
-            printf(KERN_INFO "[PBS_schedule_task_finished]%ld: Task %ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
+            printf(KERN_INFO "[schedule_task_finished]%ld: Task %ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
                    p->cur_task->instructions_planned, p->cur_task->instructions_real, p->cur_task->instructions_retired_slot);
     }
 

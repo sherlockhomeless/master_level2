@@ -106,6 +106,7 @@ void setup_plan(struct PBS_Plan* p){
     }
     p->tasks[MAX_NUMBER_TASKS_IN_PLAN-1].task_id = -2;
     p->instructions_planned = 123456789;
+    p->num_processes = MAX_NUMBER_PROCESSES;
 }
 
 

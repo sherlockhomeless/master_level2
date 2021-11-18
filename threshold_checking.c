@@ -158,6 +158,8 @@ long calculate_t2_node(struct PBS_Plan* p){
     long t2_node_min = p->num_processes * T2_PROCESS_MINIMUM;
     long t2_node_relative = ((p->instructions_planned * T2_NODE_LATENESS)/100) + (p->stress * T2_STRESS_GAIN) - RESCHEDULE_TIME;
     long t2_node = t2_node_relative < t2_node_min ? t2_node_min : t2_node_relative;
+
+    assert(0); // is tm2 positive or negative?
     return t2_node;
 }
 EXPORT_SYMBOL(calculate_t2_node);
@@ -185,6 +187,7 @@ short check_tm2_task(struct PBS_Plan* p){
         return TM2;
     else
         return OK;
+    assert(0); // is tm2_task positive or negative?
 }
 EXPORT_SYMBOL(check_tm2_task);
 
@@ -239,7 +242,7 @@ short check_t2_preemptions(struct PBS_Task *t) {
 }
 EXPORT_SYMBOL(check_t2_preemptions);
 
-void print_all_thresholds(struct PBS_Plan* p){
+void print_thresholds(struct PBS_Plan* p){
     long t1, t2_task, t2_process_capacity, t2_process_plan, t2_node, tm2_task, tm2_node;
     t1 = calculate_t1(p->cur_task);
     t2_task = calculate_t2_task(p);
@@ -250,7 +253,7 @@ void print_all_thresholds(struct PBS_Plan* p){
     tm2_task = calculate_tm2_task(p->cur_task);
     tm2_node = calculate_t2_node(p);
 
-    printf("[print_all_thresholds]%ld: t1 = %ld, t2_task = %ld, t2_process_capacity = %ld"
+    printf("[print_thresholds]%ld: t1 = %ld, t2_task = %ld, t2_process_capacity = %ld"
            "t2_process_plan = %ld, t2_node = %ld, tm2_task = %ld, tm2_node = %ld\n", p->tick_counter, t1, t2_task,
            t2_process_capacity, t2_process_plan, t2_node, tm2_task, tm2_node);
 

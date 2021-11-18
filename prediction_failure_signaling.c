@@ -10,6 +10,7 @@
 #include "plan.h"
 #include "prediction_failure_handling.h"
 #include "prediction_failure_signaling.h"
+#include "threshold_checking.h"
 
 struct PredictionFailureSignal lastSignals [SIZE_SIG_BUFFER] = {0}; // ring buffer to track latest signals
 static int cur_sig_buffer_position;
@@ -80,6 +81,8 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
     }
     if (LOG_PBS)
         printf(KERN_DEBUG "[reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
+    if (LOG_PBS)
+        print_thresholds(p);
 }
 EXPORT_SYMBOL(reschedule);
 
