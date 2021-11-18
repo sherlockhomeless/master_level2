@@ -71,7 +71,7 @@ void schedule_task_finished(struct PBS_Plan *p){
     long instruction_surplus = p->cur_task->instructions_retired_slot - p->cur_task->instructions_real; // take surplus of instructions attributed to cur_task and remove them
 
     // --- check t-2 ---
-    if ( check_tm2_task(p)){
+    if ( check_tm2_task(p) || check_tm2_node(p)){
         signal_tm2(p);
         if (LOG_PBS)
             printf(KERN_WARNING "[PBS_schedule_task_finished]%ld: Task %ld finished early\n",p->tick_counter, p->cur_task->task_id);

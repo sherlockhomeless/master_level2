@@ -201,16 +201,31 @@ long calculate_tm2_task(struct PBS_Task* t){
 }
 EXPORT_SYMBOL(calculate_tm2_task);
 
-long calculate_tm2_node(struct PBS_Plan* p){
-    assert(0);
-}
 
 short check_tm2_node(struct PBS_Plan* plan){
+    long tm2_node;
     if (!TM2_NODE_ENABLED)
         return OK;
-    return OK;
+
+    tm2_node = calculate_t2_node(plan);
+
+    if (plan->lateness < tm2_node)
+        return TM2;
+    else
+        return OK;
+
 }
 EXPORT_SYMBOL(check_tm2_node);
+
+long calculate_tm2_node(struct PBS_Plan* p){
+    long tm2_node_relative, tm2_node, lower_bound;
+    tm2_node_relative = p->instructions_planned * TM2_NODE_EARLINESS_CAP;
+    lower_bound = (TM2_NODE_LOWER_BOUND * p->instructions_planned) / 100;
+    tm2_node = tm2_node_relative > lower_bound ? tm2_node_relative : lower_bound;
+    assert(tm2_node < 0);
+    return lower_bound;
+}
+EXPORT_SYMBOL(calculate_tm2_node);
 
 short check_t2_preemptions(struct PBS_Task *t) {
     if (!T2_PREEMPTIONS_ENABLED)

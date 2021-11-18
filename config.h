@@ -44,8 +44,8 @@
 #define TM2_TASK_SIGNALING_START (T2_TASK_SIGNALING_LIMIT * -1)
 
 // Tm2 Node
-#define TM2_NODE_EARLINESS_CAP  
-#define TM2_LOWER_BOUND
+#define TM2_NODE_EARLINESS_CAP (-1*(100 - (T2_NODE_LATENESS - 100)))
+#define TM2_NODE_LOWER_BOUND -20
 
 // --- RESCHEDULING ---
 #define STRETCH_CONSTANT 105 // percentage as int; determines how much tasks are stretched by rescheduling
