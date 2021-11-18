@@ -27,6 +27,6 @@ short check_t2_node(struct PBS_Plan*);
 long calculate_tm2_node(struct PBS_Plan*);
 short check_tm2_node(struct PBS_Plan*);
 
-
 short check_t2_preemptions(struct PBS_Task *t);
 
+void print_all_thresholds(struct PBS_Plan*);

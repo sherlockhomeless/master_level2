@@ -238,3 +238,20 @@ short check_t2_preemptions(struct PBS_Task *t) {
     }
 }
 EXPORT_SYMBOL(check_t2_preemptions);
+
+void print_all_thresholds(struct PBS_Plan* p){
+    long t1, t2_task, t2_process_capacity, t2_process_plan, t2_node, tm2_task, tm2_node;
+    t1 = calculate_t1(p->cur_task);
+    t2_task = calculate_t2_task(p);
+    t2_process_capacity = calculate_capacity_buffer(p->cur_process);
+    t2_process_plan = calculate_allowed_plan_buffer(p->cur_process, p);
+    t2_node = calculate_t2_node(p);
+
+    tm2_task = calculate_tm2_task(p->cur_task);
+    tm2_node = calculate_t2_node(p);
+
+    printf("[print_all_thresholds]%ld: t1 = %ld, t2_task = %ld, t2_process_capacity = %ld"
+           "t2_process_plan = %ld, t2_node = %ld, tm2_task = %ld, tm2_node = %ld\n", p->tick_counter, t1, t2_task,
+           t2_process_capacity, t2_process_plan, t2_node, tm2_task, tm2_node);
+
+}

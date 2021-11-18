@@ -79,7 +79,7 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
         cur_task++;
     }
     if (LOG_PBS)
-        printf(KERN_DEBUG "[PBS_reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
+        printf(KERN_DEBUG "[reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
 }
 EXPORT_SYMBOL(reschedule);
 
@@ -124,5 +124,5 @@ void print_signals(){
 
 void receive_new_plan(struct PBS_Plan* p){
     if (LOG_PBS)
-        printf("[PBS_RECEIVE_NEW_PLAN]%ld: New Plan received\n", p->tick_counter);
+        printf("[receive_new_plan]%ld: New Plan received\n", p->tick_counter);
 }
