@@ -88,7 +88,7 @@ void schedule_task_finished(struct PBS_Plan *p){
 
     p->instructions_retired -= instruction_surplus;
     p->cur_process->instructions_retired -= instruction_surplus;
-    p->cur_task->instructions_retired_slot = p->cur_task->instructions_real;
+    //p->cur_task->instructions_retired_slot = p->cur_task->instructions_real;
 
     if (p->stress != 0)
         p->stress--;

@@ -47,6 +47,8 @@ void test_replace_unallocated_slot_in_plan();
 void test_task_state_changes_when_finished();
 void test_preempt_cur_task();
 void test_reschedule();
+void test_task_vs_slot_instructions();
+
 int test_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
@@ -69,12 +71,13 @@ void run_unit_tests(){
     test_handle_unallocated();
     test_task_state_changes_when_finished();
     test_reschedule();
+    test_task_vs_slot_instructions();
 }
 
 void test_find_slot_to_move_to(){
     int i;
     struct PBS_Plan p = {0};
-    get_plan(&p);
+    setup_plan(&p);
     struct PBS_Process processes [MAX_NUMBER_PROCESSES];
 
     long order[5] = {0,1,2,3,0};
@@ -104,7 +107,7 @@ void test_task_moving(){
 void test_insert_preempted_tasks() {
     int i;
     struct PBS_Plan p = {0};
-    get_plan(&p);
+    setup_plan(&p);
     struct PBS_Task* tasks = &p.tasks[0];
 
     long order[5] = {0,1,2,3,4};
@@ -126,7 +129,7 @@ void test_insert_preempted_tasks() {
 
 void test_preempt_cur_task(){
     struct PBS_Plan p = {0};
-    get_plan(&p);
+    setup_plan(&p);
     struct PBS_Task t;
 
     /**
@@ -272,7 +275,7 @@ void test_handle_unallocated(){
     struct PBS_Plan p = {0};
     struct PBS_Task* tasks = &p.tasks[0];
     struct PBS_Task cur_t;
-    get_plan(&p);
+    setup_plan(&p);
 
     // unallocated slot
     cur_t = create_task(-1, -1, 100, 100);
@@ -329,7 +332,7 @@ void test_task_state_changes_when_finished(){
 
 void test_reschedule(){
     struct PBS_Plan p;
-    get_plan(&p);
+    setup_plan(&p);
 
     struct PBS_Task t;
 
@@ -352,6 +355,42 @@ void test_reschedule(){
     assert(p.tasks[2].instructions_planned == (1000 * STRETCH_CONSTANT)/100);
 }
 
+void test_task_vs_slot_instructions(){
+    long instructions_per_tick = INS_PER_TICK;
+    struct PBS_Plan p = {};
+    struct PBS_Task task;
+    struct PBS_Task *task_p = &p.tasks[0];
+    setup_plan(&p);
+
+    task = create_task(0, 0, instructions_per_tick, instructions_per_tick*2);
+    p.tasks[0] = task;
+    task = create_task(1,1, instructions_per_tick,instructions_per_tick);
+    p.tasks[1] = task;
+    task = create_task(2,0, instructions_per_tick,instructions_per_tick);
+    p.tasks[2] = task;
+    p.tasks[3].task_id = -2;
+
+    // retire instructions in original slot/task
+    pbs_run_timer_tick(&p);
+
+    assert(task_p->instructions_retired_task == INS_PER_TICK);
+    assert(task_p->instructions_retired_slot == INS_PER_TICK);
+
+    // task with id 1 is cur_task
+    preempt_cur_task(&p);
+    assert(p.cur_task->task_id == 1);
+
+    // task 1 is done
+    pbs_run_timer_tick(&p);
+    assert(p.cur_task->task_id == 0);
+
+    // preempted task t0 is run again, it finishes
+    pbs_run_timer_tick(&p);
+    assert(p.tasks[1].instructions_retired_task == 2 * instructions_per_tick);
+    assert(p.tasks[1].instructions_retired_slot ==  instructions_per_tick);
+    assert(p.tasks[2].instructions_retired_slot ==  instructions_per_tick);
+}
+
 // ### TEST RUN ###
 // creates a plan, runs a couple of function to check if information tracking is working properly
 // then runs the full remaining plan to test if it can without any errors
@@ -362,7 +401,7 @@ int test_run(){
     struct PBS_Task* cur_task;
     struct PBS_Plan plan = {0};
     struct PBS_Plan* plan_ptr = &plan;
-    get_plan(plan_ptr);
+    setup_plan(plan_ptr);
     test_plan_parsing(plan_ptr);
     check_thresholds(plan_ptr);
     check_run_task_on_time(plan_ptr); // finish t0

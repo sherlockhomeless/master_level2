@@ -86,7 +86,7 @@ short check_t2_task( struct PBS_Plan *p) {
         return OK;
     t2_task = calculate_t2_task(p);
     // compare
-    if (p->cur_task->instructions_retired_slot >= t2_task)
+    if (p->cur_task->instructions_retired_slot > t2_task)
         return T2;
     else
         return OK;

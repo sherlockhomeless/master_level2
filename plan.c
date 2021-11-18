@@ -93,7 +93,7 @@ void update_node_lateness(long instructions, struct PBS_Plan* p){
     p->lateness += instructions;
 }
 
-void get_plan(struct PBS_Plan* p){
+void setup_plan(struct PBS_Plan* p){
     int i;
     p->cur_task = &p->tasks[0];
     p->finished_tasks = &p->tasks[0];
@@ -101,7 +101,11 @@ void get_plan(struct PBS_Plan* p){
     for (i = 0; i < MAX_NUMBER_TASKS_IN_PLAN; i++) {
         p->tasks[i] = create_task(i % 3, i, i, i);
     }
+    for (i = 0; i < MAX_NUMBER_PROCESSES; i++){
+        p->processes[i] = create_process(i, i, INS_PER_SEC, INS_PER_SEC);
+    }
     p->tasks[MAX_NUMBER_TASKS_IN_PLAN-1].task_id = -2;
+    p->instructions_planned = 123456789;
 }
 
 

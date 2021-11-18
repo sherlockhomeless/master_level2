@@ -116,7 +116,7 @@ void print_signals(){
 
     while( i < SIZE_SIG_BUFFER && sig.tick != 0){
         sig = lastSignals[i];
-        printf("[print_signals]: Signal received= tid: %ld, pid: %ld, tick: %ld, type: %d",
+        printf("[print_signals]: Signal received= tid: %ld, pid: %ld, tick: %ld, type: %d\n",
                sig.task_id, sig.process_id, sig.tick, sig.type_signal);
         i++;
     }

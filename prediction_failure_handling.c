@@ -87,7 +87,7 @@ long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
         state = next_slot->state;
         if (pid == target_pid){
             if (LOG_PBS)
-                printf(KERN_DEBUG "[PBS_find_slot_to_move_to]%ld, found slot %ld for (%ld, %ld)\n",p->tick_counter, counter - 1, p->cur_task->task_id, p->cur_task->process_id);
+                printf(KERN_DEBUG "[find_slot_to_move_to]%ld: found slot %ld for (%ld, %ld)\n",p->tick_counter, counter - 1, p->cur_task->task_id, p->cur_task->process_id);
             assert(counter >= 1 );
             return counter - 1;
         }

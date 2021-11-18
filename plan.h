@@ -22,5 +22,5 @@ long calculate_length_plan(struct PBS_Plan*);
 
 
 // --- for testing ---
-void get_plan(struct PBS_Plan* p);
+void setup_plan(struct PBS_Plan* p);
 #endif //LEVEL2_PLAN_H
