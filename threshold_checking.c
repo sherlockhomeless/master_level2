@@ -164,26 +164,46 @@ EXPORT_SYMBOL(calculate_t2_node);
 
 /* --- T-2 ----*/
 /**
- * Check tm2, a prediction failure condition related to significant earliness
  * @param p
  * @return
  */
 short check_tm2_task(struct PBS_Plan* p){
+    long tm2_task;
     struct PBS_Task* task = p->cur_task;
     long plan_length = task->instructions_planned;
-    long tm2_task = (plan_length * T2_SIGMA / 10) / 100;
 
     if (!TM2_TASK_ENABLED) {
         return OK;
     }
-    assert(tm2_task < plan_length);
 
-    if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED)
+    tm2_task = calculate_tm2_task(task);
+
+    assert(tm2_task < plan_length);
+    assert(tm2_task > 0);
+
+    if (task->instructions_retired_slot > tm2_task && task->state == PLAN_TASK_FINISHED)
         return TM2;
     else
         return OK;
 }
 EXPORT_SYMBOL(check_tm2_task);
+
+/**
+ * Calculates Tm2; consider the fact that MAX/MIN values are swapped for tm2-values
+ */
+long calculate_tm2_task(struct PBS_Task* t){
+    long tm2_task_relative, tm2_task_max, tm2_task;
+    tm2_task_relative = (t->instructions_planned * TM2_SIGMA)/100;
+    tm2_task_max = tm2_task_relative > TM2_TASK_SIGNALING_LIMIT ? t->instructions_planned + TM2_TASK_SIGNALING_LIMIT : tm2_task_relative;
+    tm2_task_max = tm2_task_max > 0 ? tm2_task_max : 1; // in some configurations tm2 could be 0 or smaller
+    tm2_task = tm2_task_max < TM2_TASK_SIGNALING_START ? TM2_TASK_SIGNALING_START : tm2_task_max;
+    return tm2_task;
+}
+EXPORT_SYMBOL(calculate_tm2_task);
+
+long calculate_tm2_node(struct PBS_Plan* p){
+    assert(0);
+}
 
 short check_tm2_node(struct PBS_Plan* plan){
     if (!TM2_NODE_ENABLED)
@@ -192,6 +212,14 @@ short check_tm2_node(struct PBS_Plan* plan){
 }
 EXPORT_SYMBOL(check_tm2_node);
 
-short check_t2_preemptions(struct PBS_Plan*){
-    
+short check_t2_preemptions(struct PBS_Task *t) {
+    if (!T2_PREEMPTIONS_ENABLED)
+        return OK;
+
+    if (t->was_preempted > T2_MAX_PREEMPTIONS){
+        return T2;
+    } else {
+        return OK;
+    }
 }
+EXPORT_SYMBOL(check_t2_preemptions);

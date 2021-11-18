@@ -106,7 +106,8 @@ void schedule_timer_tick(struct PBS_Plan *p){
     if(p->stress <= 0) {
         if (check_t2_task(p) ||
             check_t2_process(p) ||
-            check_t2_node(p))            {
+            check_t2_node(p)   ||
+            check_t2_preemptions(p->cur_task)){
             signal_t2(p);
         }
     }
