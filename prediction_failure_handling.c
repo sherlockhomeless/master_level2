@@ -71,7 +71,7 @@ EXPORT_SYMBOL(handle_no_preemption_slot_found);
  * @return returns index of next slot BEFORE other process with same ID; returns -2 if no slot can be found
  */
 long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
-    struct PBS_Task* next_slot = p->tasks;
+    struct PBS_Task* next_slot = p->cur_task;
     short state;
     long pid = 0;
     long counter = 0;
@@ -88,7 +88,7 @@ long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
         if (pid == target_pid){
             if (LOG_PBS)
                 printf(KERN_DEBUG "[find_slot_to_move_to]%ld: found slot %ld with task (tid: %ld, pid: %ld)"
-                                  " for  task(tid: %ld, pid: %ld)\n",p->tick_counter, counter, p->tasks[counter].task_id,
+                                  " for task(tid: %ld, pid: %ld)\n",p->tick_counter, counter, p->tasks[counter].task_id,
                                   p->tasks[counter].process_id, p->cur_task->task_id, p->cur_task->process_id);
             assert(counter >= 1 );
             return counter - 1;

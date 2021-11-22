@@ -411,7 +411,10 @@ int test_run(){
     check_run_task_late_time(plan_ptr);
     check_preempt_task(plan_ptr);
     while(plan_ptr->cur_task->task_id != -2) {
+        if (plan_ptr->tick_counter == 33295)
+            printf("del");
         pbs_run_timer_tick(plan_ptr);
+
     }
 
     print_signals();
