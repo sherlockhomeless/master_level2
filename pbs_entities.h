@@ -58,4 +58,5 @@ struct PBS_Process {
     long tick_counter;
     long tasks_finished;
     long stress;
+    long lateness_balancer; // it has to be assumed that job-scheduler is able to fix lateness
 };

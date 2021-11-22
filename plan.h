@@ -19,6 +19,7 @@ void update_node_lateness(long , struct PBS_Plan* );
 int number_processes_in_plan(struct PBS_Plan*);
 void replace_unallocated_slot_in_plan(struct PBS_Task *replacement_task, struct PBS_Plan *p);
 long calculate_length_plan(struct PBS_Plan*);
+void balance_lateness(struct PBS_Plan*);
 
 
 // --- for testing ---

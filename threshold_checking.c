@@ -183,11 +183,14 @@ short check_tm2_task(struct PBS_Plan* p){
     assert(tm2_task < plan_length);
     assert(tm2_task > 0);
 
-    if (task->instructions_retired_slot > tm2_task && task->state == PLAN_TASK_FINISHED)
+    if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED) {
+        if (LOG_PBS)
+            printf("[check_tm2_task]%ld: Task %ld triggered tm2 with (%ld/%ld)\n", p->tick_counter,
+                   p->cur_task->task_id, p->cur_task->instructions_planned, p->cur_task->instructions_retired_task);
         return TM2;
+    }
     else
         return OK;
-    assert(0); // is tm2_task positive or negative?
 }
 EXPORT_SYMBOL(check_tm2_task);
 
@@ -205,15 +208,19 @@ long calculate_tm2_task(struct PBS_Task* t){
 EXPORT_SYMBOL(calculate_tm2_task);
 
 
-short check_tm2_node(struct PBS_Plan* plan){
+short check_tm2_node(struct PBS_Plan* p){
     long tm2_node;
     if (!TM2_NODE_ENABLED)
         return OK;
 
-    tm2_node = calculate_tm2_node(plan);
+    tm2_node = calculate_tm2_node(p);
 
-    if (plan->lateness < tm2_node)
+    if (p->lateness < tm2_node){
+        if (LOG_PBS)
+            printf("[check_tm2_node]%ld: Tm2 triggered with node lateness %ld)\n", p->tick_counter,
+                   p->lateness);
         return TM2;
+    }
     else
         return OK;
 

@@ -155,5 +155,11 @@ long calculate_length_plan(struct PBS_Plan* p) {
     }
     return sum;
 }
-
 EXPORT_SYMBOL(calculate_length_plan);
+
+void balance_lateness(struct PBS_Plan* p){
+    p->lateness = 0;
+    p->cur_process->lateness = 0;
+}
+
+EXPORT_SYMBOL(balance_lateness);

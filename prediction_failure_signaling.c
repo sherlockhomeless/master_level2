@@ -64,7 +64,6 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
 
     struct PBS_Task* cur_task = p->cur_task;
 
-
     // apply stretch
     if(signal == T2)
         stretch_factor = STRETCH_CONSTANT;
@@ -79,6 +78,7 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
         }
         cur_task++;
     }
+    balance_lateness(p);
     if (LOG_PBS)
         printf(KERN_DEBUG "[reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
     if (LOG_PBS)
