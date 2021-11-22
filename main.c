@@ -318,6 +318,7 @@ void test_task_state_changes_when_finished(){
     task = create_task(1,1, INS_PER_TICK, INS_PER_TICK);
     p.tasks[1] = task;
     p.tasks[2].task_id = -2;
+
     pbs_run_timer_tick(&p);
 
     assert(first_task != p.cur_task);

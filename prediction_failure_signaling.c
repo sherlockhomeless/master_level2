@@ -41,7 +41,7 @@ void signal_tm2(struct PBS_Plan* p){
     p->stress = STRESS_RESET;
 
     sig.task_id = p->cur_task->task_id,
-            sig.process_id = p->cur_process->process_id;
+    sig.process_id = p->cur_process->process_id;
     sig.tick = p->tick_counter;
     sig.type_signal = TM2;
 
