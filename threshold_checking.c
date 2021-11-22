@@ -159,7 +159,7 @@ long calculate_t2_node(struct PBS_Plan* p){
     long t2_node_relative = ((p->instructions_planned * T2_NODE_LATENESS)/100) + (p->stress * T2_STRESS_GAIN) - RESCHEDULE_TIME;
     long t2_node = t2_node_relative < t2_node_min ? t2_node_min : t2_node_relative;
 
-    assert(0); // is tm2 positive or negative?
+    assert(t2_node > 0); // is tm2 positive or negative?
     return t2_node;
 }
 EXPORT_SYMBOL(calculate_t2_node);
@@ -210,7 +210,7 @@ short check_tm2_node(struct PBS_Plan* plan){
     if (!TM2_NODE_ENABLED)
         return OK;
 
-    tm2_node = calculate_t2_node(plan);
+    tm2_node = calculate_tm2_node(plan);
 
     if (plan->lateness < tm2_node)
         return TM2;

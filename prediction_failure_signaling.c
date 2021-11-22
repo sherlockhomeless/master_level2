@@ -25,11 +25,11 @@ void signal_t2(struct PBS_Plan* p){
     sig.task_id = p->cur_task->task_id,
             sig.process_id = p->cur_process->process_id;
     sig.tick = p->tick_counter;
-    sig.type_signal = STRETCH_SIGNAL;
+    sig.type_signal = T2;
 
     add_signal(sig);
 
-    reschedule(p, STRETCH_SIGNAL, p->cur_process->process_id);
+    reschedule(p, T2, p->cur_process->process_id);
     if (LOG_PBS)
         printf(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
 }
@@ -44,11 +44,11 @@ void signal_tm2(struct PBS_Plan* p){
     sig.task_id = p->cur_task->task_id,
             sig.process_id = p->cur_process->process_id;
     sig.tick = p->tick_counter;
-    sig.type_signal = SHRINK_SIGNAL;
+    sig.type_signal = TM2;
 
     add_signal(sig);
 
-    reschedule(p, SHRINK_SIGNAL, 0);
+    reschedule(p, TM2, 0);
 }
 EXPORT_SYMBOL(signal_tm2);
 
@@ -66,7 +66,7 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
 
 
     // apply stretch
-    if(signal == STRETCH_SIGNAL)
+    if(signal == T2)
         stretch_factor = STRETCH_CONSTANT;
     else
         stretch_factor = SHRINK_CONSTANT;

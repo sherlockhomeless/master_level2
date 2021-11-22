@@ -349,7 +349,7 @@ void test_reschedule(){
     p.tasks[2] = t;
 
     p.tasks[3].task_id = -2;
-    reschedule(&p, STRETCH_SIGNAL, 0);
+    reschedule(&p, T2, 0);
 
     assert(p.tasks[0].instructions_planned == (100 * STRETCH_CONSTANT)/100);
     assert(p.tasks[1].instructions_planned == 100);
