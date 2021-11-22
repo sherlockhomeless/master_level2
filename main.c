@@ -20,7 +20,7 @@
 #include "prediction_failure_signaling.h"
 #include "config.h"
 
-const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan2.log";
+const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
 const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
 
 void read_plan(FILE*, char* , long);
