@@ -1,10 +1,3 @@
-//
-// Created by ml on 23.03.21.
-//
-/**
- * todo: Shrink tasks
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>

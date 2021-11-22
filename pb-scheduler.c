@@ -1,6 +1,3 @@
-//
-// Created by ml on 26.03.21.
-//
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -121,7 +118,7 @@ void schedule_timer_tick(struct PBS_Plan *p){
         return;
     }
     if(LOG_PBS)
-        printf(KERN_INFO "[PBS_schedule_timer_tick]%ld: (%ld,%ld) retired instructions %ld\n",
+        printf(KERN_INFO "[schedule_timer_tick]%ld: (%ld,%ld) retired instructions %ld\n",
                p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
     if (p->stress)
         p->stress--;
@@ -144,7 +141,7 @@ void switch_task(struct PBS_Plan* p){
         handle_free_slot(p);
     }
     if(LOG_PBS)
-        printf(KERN_INFO "[PBS_switch_task]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
+        printf(KERN_INFO "[switch_task]%ld: switched from task %ld to task %ld in tick %ld \n", p->tick_counter, old_task->task_id, p->cur_task->task_id, p->tick_counter);
 }
 EXPORT_SYMBOL(switch_task);
 

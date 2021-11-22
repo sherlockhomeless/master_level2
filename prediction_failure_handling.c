@@ -56,9 +56,9 @@ EXPORT_SYMBOL(preempt_cur_task);
 
 void handle_no_preemption_slot_found(struct PBS_Plan *p) {//fixme: how to deal with this issue? State: Just sign PBS_Taskfinished
     long instructions_missing = p->cur_task->instructions_real - p->cur_task->instructions_retired_task;
-    printf(KERN_ALERT"[PBS_handle_no_preemption_slot_found]%ld: Found no other slot to move task to \n", p->tick_counter);
+    printf(KERN_ALERT"[handle_no_preemption_slot_found]%ld: Found no other slot to move task to \n", p->tick_counter);
     update_retired_instructions(instructions_missing, p);
-    printf(KERN_EMERG "[PBS_handle_no_preemption_slot_found]%ld: no preemption slot found\n", p->tick_counter);
+    printf(KERN_EMERG "[handle_no_preemption_slot_found]%ld: no preemption slot found\n", p->tick_counter);
     p->state = PLAN_FINISHED;
 }
 
@@ -126,7 +126,7 @@ void move_preempted_tasks(long insertion_slot, int stack_size, struct PBS_Task* 
     for ( i = 0; i < stack_size; i++){
         *(cur_task + i) = preempted_tasks[i];
         if (LOG_PBS)
-            printf(KERN_DEBUG "[PBS_move_preempted_tasks]%ld: Moved (%ld,%ld) in place of (%ld,%ld)\n", p->tick_counter,
+            printf(KERN_DEBUG "[move_preempted_tasks]%ld: Moved (%ld,%ld) in place of (%ld,%ld)\n", p->tick_counter,
                cur_task->task_id, cur_task->process_id, task_before.task_id, task_before.process_id);
     }
 

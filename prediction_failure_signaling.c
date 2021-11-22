@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-
 #include "kernel_dummies.h"
 #include "pbs_entities.h"
 #include "plan.h"

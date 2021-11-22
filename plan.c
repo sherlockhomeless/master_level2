@@ -20,7 +20,6 @@ void update_retired_instructions(long instructions_retired, struct PBS_Plan* p){
     struct PBS_Task * slot_owner;
     short task_state;
 
-    // ???
     if (instructions_retired < 0){
         update_free_space_usage(instructions_retired, p);
         return;
@@ -56,7 +55,7 @@ void update_cur_process(struct PBS_Plan *p) {
     else
         p->cur_process = &p->processes[MAX_NUMBER_PROCESSES -1];
     if(LOG_PBS)
-        printf(KERN_INFO "[PBS_update_cur_task_process]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
+        printf(KERN_INFO "[update_cur_task_process]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
            p->cur_task->task_id, p->cur_task->process_id);
 }
 
