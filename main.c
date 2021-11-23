@@ -13,7 +13,9 @@
 #include "prediction_failure_signaling.h"
 #include "config.h"
 
-const char* PLAN_PATH = "../test/plan.log";
+
+//const char* PLAN_PATH = "/home/vagrant/master_level2/test/plan.log";
+const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
 const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
 
 void read_plan(FILE*, char* , long);
@@ -188,6 +190,7 @@ void test_preempt_cur_task(){
 
 void test_find_next_task_for_all_processes(){
     struct PBS_Plan p = {0};
+    setup_plan(&p);
     struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES];
     short has_task_with_termination_id = 0;
     int i;
@@ -310,10 +313,10 @@ void test_task_state_changes_when_finished(){
     struct PBS_Task task = create_task(0, 0, INS_PER_TICK, INS_PER_TICK);
     struct PBS_Task* first_task = &p.tasks[0];
     setup_plan(&p);
+
     p.tasks[0] = task;
     p.cur_task = &p.tasks[0];
     p.processes[0] = create_process(0,1,10000000, 1000000);
-    p.cur_process = &p.processes[0];
 
     task = create_task(1,1, INS_PER_TICK, INS_PER_TICK);
     p.tasks[1] = task;
@@ -323,6 +326,7 @@ void test_task_state_changes_when_finished(){
 
     assert(first_task != p.cur_task);
     assert(first_task->state == PLAN_TASK_FINISHED);
+    printf("test_task_state_changes_when_finished() passed");
 }
 
 void test_reschedule(){

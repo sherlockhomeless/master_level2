@@ -96,7 +96,7 @@ void setup_plan(struct PBS_Plan* p){
     int i;
     p->cur_task = &p->tasks[0];
     p->finished_tasks = &p->tasks[0];
-    p->cur_process = &p->processes[p->cur_task->process_id];
+    p->cur_process = &p->processes[0];
     for (i = 0; i < MAX_NUMBER_TASKS_IN_PLAN; i++) {
         p->tasks[i] = create_task(i % 3, i, i, i);
     }
@@ -157,9 +157,7 @@ long calculate_length_plan(struct PBS_Plan* p) {
 EXPORT_SYMBOL(calculate_length_plan);
 
 void balance_lateness(struct PBS_Plan* p){
-    printf("%p, %p", p, p->cur_process);
     p->lateness = 0;
     p->cur_process->lateness = 0;
 }
-
 EXPORT_SYMBOL(balance_lateness);
