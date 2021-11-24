@@ -6,7 +6,7 @@ This repository also contains defintions in **pbs_entities.h** and **config.h** 
 
 ## Run as userland program
 
-1. Clone this repository
+1. Clone repository
 1. Change the macro `PLAN_PATH` in `main.c` to the absolute path of `test/plan.log`.
 2. Run Cmake in the current directory `cmake .`
 3. Run make `make`

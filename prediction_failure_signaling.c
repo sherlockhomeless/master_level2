@@ -12,6 +12,7 @@
 #include "threshold_checking.h"
 
 struct PredictionFailureSignal lastSignals [SIZE_SIG_BUFFER] = {0}; // ring buffer to track latest signals
+int prediction_failures_caused = 0;
 static int cur_sig_buffer_position;
 void add_signal(struct PredictionFailureSignal sig);
 
@@ -91,6 +92,7 @@ void add_signal(struct PredictionFailureSignal sig){
     if (cur_sig_buffer_position == 100)
         cur_sig_buffer_position = 0;
     lastSignals[cur_sig_buffer_position] = sig;
+    prediction_failures_caused++;
 }
 EXPORT_SYMBOL(add_signal);
 
@@ -128,3 +130,9 @@ void receive_new_plan(struct PBS_Plan* p){
     if (LOG_PBS)
         printf("[receive_new_plan]%ld: New Plan received\n", p->tick_counter);
 }
+
+int number_prediction_failures_caused(){
+    return prediction_failures_caused;
+}
+
+EXPORT_SYMBOL(number_prediction_failures_caused);

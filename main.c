@@ -43,6 +43,7 @@ void test_task_state_changes_when_finished();
 void test_preempt_cur_task();
 void test_reschedule();
 void test_task_vs_slot_instructions();
+void test_lateness_balancer();
 
 int test_run();
 
@@ -67,6 +68,7 @@ void run_unit_tests(){
     test_task_state_changes_when_finished();
     test_reschedule();
     test_task_vs_slot_instructions();
+    test_lateness_balancer();
 }
 
 void test_find_slot_to_move_to(){
@@ -389,7 +391,23 @@ void test_task_vs_slot_instructions(){
     assert(p.tasks[1].instructions_retired_slot ==  instructions_per_tick);
     assert(p.tasks[2].instructions_retired_slot ==  instructions_per_tick);
 }
+// checks if the node lateness is reset after a t2-signal without problems
+void test_lateness_balancer(){
+    struct PBS_Task t;
+    struct PBS_Plan p = {0};
+    setup_plan(&p);
 
+    t = create_task(0,0, INS_PER_TICK, 100*INS_PER_TICK);
+    p.tasks[0] = t;
+    p.tasks[1].task_id = -2;
+
+    p.lateness = 98765432100000;
+
+    pbs_run_timer_tick(&p);
+
+    assert(number_prediction_failures_caused() == 1);
+    assert(p.lateness == 0);
+}
 // ### TEST RUN ###
 // creates a plan, runs a couple of function to check if information tracking is working properly
 // then runs the full remaining plan to test if it can without any errors
