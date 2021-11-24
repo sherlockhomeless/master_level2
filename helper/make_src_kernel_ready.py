@@ -69,7 +69,11 @@ def get_files_in_folder(src) -> [SrcFile]:
         else:
             with open(file, 'r') as f:
                 print(f'found file {file}')
-                target_files.append(SrcFile(file, f.readlines() ))
+                try:
+                    target_files.append(SrcFile(file, f.readlines() ))
+                except UnicodeDecodeError:
+                    print(f'ERROR @ {file}')
+                    assert(0)
     return target_files
 
 def create_makefile(files, dest):
