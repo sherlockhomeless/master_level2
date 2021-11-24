@@ -6,7 +6,7 @@ import os
 import re
 
 IGNORE_FILES = ('test', '.*.txt', 'kernel_dummies.h', '.*.py', '.git', 'cmake-build-debug', 'main.c', '.idea', 'parse_plan.c',
-'userland_only.*')
+'userland_only.*', 'CMakeFiles')
 
 class SrcFile:
     def __init__(self, file_name, content):
