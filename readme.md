@@ -17,8 +17,9 @@ This repository also contains defintions in **pbs_entities.h** and **config.h** 
 1. Clone fork of master-thesis to extrace changed source-files into: `git clone https://github.com/sherlockhomeless/master_thesis_linux.git -b pb --single-branch`
 1. Conversion is done via `make_src_kernel_ready.py`. The script is based on python 3.8. It takes 2 parameters:
     1. **$1** points to the path where the level2 source files are located
-    2. **$2** points to where the output should be written to. This should be $BASE_PATH_STEP1/kernel/sched/prediction_failure_handling
-2.
+    2. **$2** points to where the output should be written to. This should be $BASE_PATH_STEP1/kernel/sched/prediction_failure_handling; make sure that the path exists before running the script
+2. Check the generated Makefile present at **$2** so that no files are accidentally present that are not supposed to be there due to the compilation for example
+3.
 
 
 ## Known Bugs
