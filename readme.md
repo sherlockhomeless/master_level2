@@ -19,7 +19,7 @@ This repository also contains defintions in **pbs_entities.h** and **config.h** 
     1. **$1** points to the path where the level2 source files are located
     2. **$2** points to where the output should be written to. This should be $BASE_PATH_STEP1/kernel/sched/prediction_failure_handling; make sure that the path exists before running the script
 2. Check the generated Makefile present at **$2** so that no files are accidentally present that are not supposed to be there due to the compilation for example
-3.
+3. Compile & run kernel as usually
 
 
 ## Known Bugs

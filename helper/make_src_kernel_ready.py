@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 
+"""
+Must be called from level2 base directory
+"""
+
 import sys
 import shutil
 import os
 import re
 
-IGNORE_FILES = ('test', '.*.txt', 'kernel_dummies.h', '.*.py', '.git', 'cmake-build-debug', 'main.c', '.idea', 'parse_plan.c',
-'userland_only.*', 'CMakeFiles', 'level2', 'helper', '*cmake')
+IGNORE_FILES = ('test', '.*.txt', 'kernel_dummies.h', '.*.py', '.git', 'cmake-build-debug', 'main.c', '.idea',
+                'parse_plan.c', 'userland_only.*', 'CMakeFiles', 'level2', 'helper', '.*cmake')
+
 
 class SrcFile:
     def __init__(self, file_name, content):
         self.file_name = file_name
         self.content = content
+
 
 def main(src, dest):
     target_files = get_files_in_folder(src)
@@ -49,6 +55,7 @@ def iterate_lines(all_files, func, print_log=True):
                 print(line_in[:-1] + " => " + line)
         f.content = new_content
         new_content = []
+
 
 def add_kernel_header(file_list, headers):
     for header in headers:

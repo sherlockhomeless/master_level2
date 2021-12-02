@@ -8,12 +8,14 @@
 #endif //LEVEL2_PB_SCHEDULER_H
 
 struct PBS_Plan* get_pbs_plan(void);
-
-// --- interface ---
+void schedule_task_finished(struct PBS_Plan*);
+void schedule_timer_tick(struct PBS_Plan*);
+void switch_task(struct PBS_Plan*);
+void handle_free_slot(struct PBS_Plan*);
+struct PBS_Process* find_latest_process(struct PBS_Plan* p);
+void idle(struct PBS_Plan*);
 void pbs_run_timer_tick(struct PBS_Plan *p);
 void start_run(struct PBS_Plan *p);
-
-// --- for unit testing ---
 void handle_unallocated_slot(struct PBS_Plan*);
 struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[100], struct PBS_Plan *p);
 void

@@ -14,14 +14,6 @@
 #include "prediction_failure_signaling.h"
 #include "config.h"
 
-void schedule_task_finished(struct PBS_Plan*);
-void schedule_timer_tick(struct PBS_Plan*);
-void switch_task(struct PBS_Plan*);
-void handle_free_slot(struct PBS_Plan*);
-struct PBS_Process* find_latest_process(struct PBS_Plan* p);
-void idle(struct PBS_Plan*);
-
-
 struct PBS_Plan pbs_plan = {0};
 
 struct PBS_Plan* pbs_plan_ptr = &pbs_plan;
