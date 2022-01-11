@@ -128,8 +128,6 @@ EXPORT_SYMBOL(number_processes_in_plan);
  * @param p
  */
 void replace_unallocated_slot_in_plan(struct PBS_Task* replacement_task, struct PBS_Plan *p) {
-    int i;
-    struct PBS_Task tmp;
     struct PBS_Task* cur_task = replacement_task;
 
     // set current task to replacement task

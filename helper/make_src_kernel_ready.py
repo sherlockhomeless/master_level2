@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 """
-Must be called from level2 base directory
+MUST BE GIVEN 2 PARAMETERS:
+
+1. Parameter is path of level2 sources
+2. Parameter is path of $KERNEL_SOURCES/kernel/sched/prediction_failure_handling/
 """
 
 import sys

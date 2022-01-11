@@ -123,11 +123,10 @@ EXPORT_SYMBOL(check_t2_process);
 
 long calculate_capacity_buffer(struct PBS_Process *process) {
     long capacity_buffer = process->length_plan * T2_CAPACITY_BUFFER;
-
     assert(capacity_buffer > process->length_plan);
-
-    return process->length_plan * T2_CAPACITY_BUFFER;
+    return capacity_buffer;
 }
+EXPORT_SYMBOL(calculate_capacity_buffer);
 
 long calculate_allowed_plan_buffer(struct PBS_Process* process, struct PBS_Plan* p){
     int process_completion = calculate_process_completion(process);
@@ -138,7 +137,7 @@ long calculate_allowed_plan_buffer(struct PBS_Process* process, struct PBS_Plan*
     long allowed_plan_buffer = (cleared_plan_buffer * process_completion)/100;
     return allowed_plan_buffer;
 }
-EXPORT_SYMBOL(check_t2_process);
+EXPORT_SYMBOL(calculate_allowed_plan_buffer);
 
 short check_t2_node(struct PBS_Plan* plan){
     long t2_node = calculate_t2_node(plan);

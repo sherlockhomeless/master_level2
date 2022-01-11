@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "config.h"
 #include "pbs_entities.h"
 #include "kernel_dummies.h"
 #include "pb-scheduler.h"
@@ -12,7 +13,6 @@
 #include "threshold_checking.h"
 #include "prediction_failure_handling.h"
 #include "prediction_failure_signaling.h"
-#include "config.h"
 
 struct PBS_Plan pbs_plan = {0};
 
@@ -243,7 +243,7 @@ void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task 
  * @param next_tasks All upcoming tasks of active processes; index also determines pid; array is terminated with tid -2
  * @return Pointer to task that needs to be run next
  */
-struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[100], struct PBS_Plan *p) {
+struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES], struct PBS_Plan *p) {
     int i;
     int latest_preempted_task = -1;
     long max_lateness = 0;

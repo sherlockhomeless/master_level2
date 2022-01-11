@@ -1,4 +1,5 @@
 #!/usr/bin/bash
 
-./make_src_kernel_ready.py /home/ml/Dropbox/Master-Arbeit/code/level2 ~/nfs_pbs/vm/master_thesis_linux/kernel/sched/prediction_failure_handling
+helper/make_src_kernel_ready.py . /home/ml/hdd/kelvin/kernel/sched/prediction_failure_handling
+rsync -rhI --info=progress2 /home/ml/hdd/kelvin/kernel/sched/ vagrant@pbs-vm:/home/vagrant/kernel_src/kelvin/kernel/sched/
 
