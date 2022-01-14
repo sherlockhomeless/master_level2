@@ -15,9 +15,7 @@
 #include "prediction_failure_signaling.h"
 
 struct PBS_Plan pbs_plan = {0};
-
 struct PBS_Plan* pbs_plan_ptr = &pbs_plan;
-
 static int times_address_read = 0;
 
 
@@ -182,8 +180,6 @@ EXPORT_SYMBOL(handle_free_slot);
  * @param p the current plan
  */
 void handle_unallocated_slot(struct PBS_Plan* p){
-    long found_all_processes = 0;
-    struct PBS_Task *cur_task = NULL;
     struct PBS_Task* next_task_to_run;
     struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES] = {0};
 
@@ -244,7 +240,6 @@ void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task 
  * @return Pointer to task that needs to be run next
  */
 struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES], struct PBS_Plan *p) {
-    int i;
     int latest_preempted_task = -1;
     long max_lateness = 0;
     long cur_lateness = 0;
