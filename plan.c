@@ -159,3 +159,20 @@ void balance_lateness(struct PBS_Plan* p){
     p->cur_process->lateness = 0;
 }
 EXPORT_SYMBOL(balance_lateness);
+
+/**
+ * Prints the state of the plan in a compact form (tid, pid, state) starting at from index until to index
+ * @param from
+ * @param to
+ */
+void print_plan_state(struct PBS_Plan* p, long from, long to){
+    struct PBS_Task* task_ptr;
+    long i;
+    printf("[print_plan_state]%ld:", p->tick_counter);
+    for (i = from; i <= to; i++){
+        task_ptr = &p->tasks[i];
+        printf("%ld:(%ld,%ld,%d),", i, task_ptr->task_id, task_ptr->process_id, task_ptr->state);
+    }
+    printf("\n");
+
+}

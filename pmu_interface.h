@@ -5,6 +5,6 @@
 #ifndef LEVEL2_PMU_INTERFACE_H
 #define LEVEL2_PMU_INTERFACE_H
 
-#endif //LEVEL2_PMU_INTERFACE_H
-
 long get_retired_instructions(void);
+
+#endif //LEVEL2_PMU_INTERFACE_H

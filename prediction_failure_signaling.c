@@ -11,7 +11,7 @@
 #include "prediction_failure_signaling.h"
 #include "threshold_checking.h"
 
-struct PredictionFailureSignal lastSignals [SIZE_SIG_BUFFER] = {0}; // ring buffer to track latest signals
+struct PredictionFailureSignal lastSignals [SIZE_SIG_BUFFER] = {{0}}; // ring buffer to track latest signals
 int prediction_failures_caused = 0;
 static int cur_sig_buffer_position;
 void add_signal(struct PredictionFailureSignal sig);

@@ -13,8 +13,8 @@
 #include "prediction_failure_signaling.h"
 #include "config.h"
 
+/** TODO @ALL: Define here what Plan to run **/
 
-//const char* PLAN_PATH = "/home/vagrant/master_level2/test/plan.log";
 const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
 const char* BINARY_PATH = "/home/ml/Dropbox/Master-Arbeit/code/lkm/pbs_plan_copy/write_plan";
 
@@ -46,13 +46,15 @@ void test_task_vs_slot_instructions();
 void test_lateness_balancer();
 
 int test_run();
+int full_run();
 
 struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
 
 
 int main(){
     run_unit_tests();
-    return test_run();
+    test_run();
+    return full_run();
 }
 
 // #### UNIT TESTS ####
@@ -206,7 +208,7 @@ void test_find_next_task_for_all_processes(){
     p.tasks[2] = create_task(1,1,10,0);
     p.tasks[5] = create_task(10,1,10,0);
     // delimiter
-    p.tasks[50] = create_task(-2,0,0,0);
+    p.tasks[10] = create_task(-2,0,0,0);
 
     find_next_task_for_all_processes(&p, next_tasks);
 
@@ -426,12 +428,6 @@ int test_run(){
     check_run_task_tm2_early_time(plan_ptr); // finish t2
     check_run_task_late_time(plan_ptr);
     check_preempt_task(plan_ptr);
-    while(plan_ptr->cur_task->task_id != -2) {
-        if (plan_ptr->tick_counter == 33295)
-            printf("del");
-        pbs_run_timer_tick(plan_ptr);
-
-    }
 
     print_signals();
     return 0;
@@ -580,4 +576,23 @@ struct PBS_Task * run(struct PBS_Plan* p, struct PBS_Task* t){
     } else {
         return t;
     }
+}
+
+int full_run(){
+    int i;
+    struct PredictionFailureSignal*  sig;
+    struct PBS_Task* cur_task;
+    struct PBS_Plan plan = {0};
+    struct PBS_Plan* plan_ptr = &plan;
+    setup_plan(plan_ptr);
+    test_plan_parsing(plan_ptr);
+    while(plan_ptr->cur_task->task_id != -2) {
+        assert(plan_ptr->cur_task->task_id != -1);
+        if (plan_ptr->tick_counter == 279)// 731 important
+            printf("del");
+        pbs_run_timer_tick(plan_ptr);
+    }
+
+    print_signals();
+    return 0;
 }

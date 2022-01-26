@@ -56,7 +56,7 @@ EXPORT_SYMBOL(pbs_run_timer_tick);
 void schedule_task_finished(struct PBS_Plan *p){
     long lateness_cur_task;
     long instruction_surplus = p->cur_task->instructions_retired_slot - p->cur_task->instructions_real; // take surplus of instructions attributed to cur_task and remove them
-    short tm2_task_transgressed, tm2_node_transgressed;
+    short tm2_task_transgressed, tm2_node_transgressed = 0;
     tm2_task_transgressed = check_tm2_task(p);
     tm2_node_transgressed = check_tm2_node(p);
 
@@ -67,7 +67,7 @@ void schedule_task_finished(struct PBS_Plan *p){
             printf(KERN_WARNING "[schedule_task_finished]%ld: Task %ld finished early\n",p->tick_counter, p->cur_task->task_id);
     } else {
         if (LOG_PBS)
-            printf(KERN_INFO "[schedule_task_finished]%ld: Task %ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
+            printf(KERN_WARNING "[schedule_task_finished]%ld: Task %ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
                    p->cur_task->instructions_planned, p->cur_task->instructions_real, p->cur_task->instructions_retired_slot);
     }
 
@@ -151,7 +151,7 @@ EXPORT_SYMBOL(start_run);
  * Needs to be called when next task is free slot:
  * - Picks next task
  * - Updates Lateness
- * @param p
+ * - idling
  */
 void handle_free_slot(struct PBS_Plan* p){
     long lateness_node_before,  lateness_node_after;
@@ -169,11 +169,10 @@ void handle_free_slot(struct PBS_Plan* p){
     update_retired_instructions(- free_slot->instructions_planned, p);
     lateness_node_after = p->lateness;
     assert(lateness_node_before > lateness_node_after);
+    assert(p->cur_task->task_id != -1);
 }
-
 EXPORT_SYMBOL(handle_free_slot);
 
-// TODO: the following handle_unallocated_slot is the function that should be used; needs to be plugged in
 /**
  * Is called if pbs encounters an unallocated time slot as next task to be executed
  * cur_task already pointing at free_slot
@@ -181,7 +180,7 @@ EXPORT_SYMBOL(handle_free_slot);
  */
 void handle_unallocated_slot(struct PBS_Plan* p){
     struct PBS_Task* next_task_to_run;
-    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES] = {0};
+    struct PBS_Task next_tasks [MAX_NUMBER_PROCESSES] = {{0}};
 
     // stores upcoming task for each process in next_task_each_process
     find_next_task_for_all_processes(p, next_tasks);
@@ -231,7 +230,7 @@ void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task 
             next_tasks[cur_process_id] = cur_task;
         }
     }
-    next_tasks[i].task_id = -2;
+    next_tasks[MAX_NUMBER_PROCESSES-1].task_id = -2;
 }
 
 /**
@@ -240,7 +239,6 @@ void find_next_task_for_all_processes(const struct PBS_Plan *p, struct PBS_Task 
  * @return Pointer to task that needs to be run next
  */
 struct PBS_Task *find_substitution_task(struct PBS_Task next_tasks[MAX_NUMBER_PROCESSES], struct PBS_Plan *p) {
-    int latest_preempted_task = -1;
     long max_lateness = 0;
     long cur_lateness = 0;
     struct PBS_Task* cur_task = &next_tasks[0];
@@ -282,3 +280,4 @@ struct PBS_Plan* get_pbs_plan(void){
     return pbs_plan_ptr;
 }
 EXPORT_SYMBOL(get_pbs_plan);
+

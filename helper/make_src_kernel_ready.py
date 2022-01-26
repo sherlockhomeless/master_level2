@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-"""
+print("""
 MUST BE GIVEN 2 PARAMETERS:
 
 1. Parameter is path of level2 sources
 2. Parameter is path of $KERNEL_SOURCES/kernel/sched/prediction_failure_handling/
-"""
+""")
 
 import sys
 import shutil

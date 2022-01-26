@@ -36,6 +36,8 @@ void preempt_cur_task(struct PBS_Plan* p){
 
     p->cur_task->was_preempted++;
     insertion_slot = find_slot_to_move_to(p->cur_task->process_id, p); // returns slot index before next task of same PID
+    assert(insertion_slot > p->index_cur_task);
+    print_plan_state(p, p->index_cur_task, insertion_slot);
     stack_size = get_stack_size_preempted_tasks(preempted_tasks, p);
 
     if (insertion_slot == -2){
@@ -44,7 +46,7 @@ void preempt_cur_task(struct PBS_Plan* p){
     }
     adapt_plan_to_preemption(insertion_slot, stack_size, p);
     move_preempted_tasks(insertion_slot, stack_size, preempted_tasks, p);
-
+    print_plan_state(p, p->index_cur_task, insertion_slot);
     // update
     update_cur_process(p);
     if(LOG_PBS)
@@ -74,12 +76,12 @@ long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
     struct PBS_Task* next_slot = p->cur_task;
     short state;
     long pid = 0;
-    long counter = 0;
+    long insertion_slot = p->index_cur_task;
 
     // 0-0-1-0 => go to 1, go behind current patch of tasks with target_pid
     while(next_slot->process_id == target_pid){
         next_slot++;
-        counter++;
+        insertion_slot++;
     }
 
     while (pid != -2){
@@ -88,13 +90,13 @@ long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
         if (pid == target_pid){
             if (LOG_PBS)
                 printf(KERN_DEBUG "[find_slot_to_move_to]%ld: found slot %ld with task (tid: %ld, pid: %ld)"
-                                  " for task(tid: %ld, pid: %ld)\n",p->tick_counter, counter, p->tasks[counter].task_id,
-                                  p->tasks[counter].process_id, p->cur_task->task_id, p->cur_task->process_id);
-            assert(counter >= 1 );
-            return counter - 1;
+                                  " for task(tid: %ld, pid: %ld)\n", p->tick_counter, insertion_slot, p->tasks[insertion_slot].task_id,
+                       p->tasks[insertion_slot].process_id, p->cur_task->task_id, p->cur_task->process_id);
+            assert(insertion_slot >= 1 );
+            return insertion_slot - 1;
         }
         next_slot++;
-        counter++;
+        insertion_slot++;
     }
     return -2;
 }
@@ -173,10 +175,10 @@ EXPORT_SYMBOL(get_stack_size_preempted_tasks);
 void adapt_plan_to_preemption(long insertion_slot, long stack_size, struct PBS_Plan *p) {
     // move other tasks forwards
     int i;
-    struct PBS_Task preempted_task_task [stack_size];
+    struct PBS_Task preempted_tasks [stack_size];
     // save preempted tasks
     for (i = 0; i < stack_size; i++){
-        preempted_task_task[i] = *(p->cur_task+i);
+        preempted_tasks[i] = *(p->cur_task + i);
     }
     // move other tasks forward
     for (i = 0; i < insertion_slot; i++) {
@@ -184,7 +186,7 @@ void adapt_plan_to_preemption(long insertion_slot, long stack_size, struct PBS_P
     }
     // write preempted tasks to insertion slot
     for(i = 0; i < stack_size; i++){
-        p->tasks[insertion_slot - stack_size + i + 1] = preempted_task_task[i]; // lol, sorry
+        p->tasks[insertion_slot - stack_size + i + 1] = preempted_tasks[i]; // lol, sorry
     }
 
 }

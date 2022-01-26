@@ -23,7 +23,7 @@ long calculate_t1(struct PBS_Task* task){
     t1_relative = task->instructions_planned * T1_SIGMA;
     t1_maximum = task->instructions_planned + T1_NO_PREEMPTION;
     if(LOG_PBS)
-        printf("[calculate_t1] task %ld: instructions_planned=%ld, t1_min=%ld, t1_relative=%ld, t1_max=%ld\n", task->task_id,
+        printf(KERN_INFO "[calculate_t1] task %ld: instructions_planned=%ld, t1_min=%ld, t1_relative=%ld, t1_max=%ld\n", task->task_id,
                task->instructions_planned, t1_minimum, t1_relative, t1_maximum);
     if (t1_minimum > t1_relative)
         t1_relative = t1_minimum;
@@ -171,7 +171,6 @@ EXPORT_SYMBOL(calculate_t2_node);
 short check_tm2_task(struct PBS_Plan* p){
     long tm2_task;
     struct PBS_Task* task = p->cur_task;
-    long plan_length = task->instructions_planned;
 
     if (!TM2_TASK_ENABLED) {
         return OK;
@@ -179,7 +178,7 @@ short check_tm2_task(struct PBS_Plan* p){
 
     tm2_task = calculate_tm2_task(task);
 
-    assert(tm2_task < plan_length);
+    assert(tm2_task < task->instructions_planned);
     assert(tm2_task > 0);
 
     if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED) {
@@ -208,7 +207,7 @@ EXPORT_SYMBOL(calculate_tm2_task);
 
 
 short check_tm2_node(struct PBS_Plan* p){
-    long tm2_node;
+    long tm2_node = 0;
     if (!TM2_NODE_ENABLED)
         return OK;
 

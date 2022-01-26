@@ -20,7 +20,7 @@ int number_processes_in_plan(struct PBS_Plan*);
 void replace_unallocated_slot_in_plan(struct PBS_Task *replacement_task, struct PBS_Plan *p);
 long calculate_length_plan(struct PBS_Plan*);
 void balance_lateness(struct PBS_Plan*);
-
+void print_plan_state(struct PBS_Plan*, long, long);
 
 // --- for testing ---
 void setup_plan(struct PBS_Plan* p);
