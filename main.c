@@ -33,8 +33,6 @@ void check_signal_t2_task(struct PBS_Plan *plan);
 // ### UNIT TESTS ####
 void run_unit_tests();
 void test_find_slot_to_move_to();
-void test_insert_preempted_tasks();
-void test_task_moving();
 void test_handle_unallocated();
 void test_find_next_task_for_all_processes();
 void test_find_suitable_task();
@@ -60,9 +58,7 @@ int main(){
 // #### UNIT TESTS ####
 void run_unit_tests(){
     test_find_slot_to_move_to();
-    test_task_moving();
     test_find_suitable_task();
-    test_insert_preempted_tasks();
     test_preempt_cur_task();
     test_find_next_task_for_all_processes();
     test_replace_unallocated_slot_in_plan();
@@ -85,6 +81,7 @@ void test_find_slot_to_move_to(){
     for ( i = 0; i < 5; i++){
         p.tasks[i].process_id = order[i];
     }
+    p.tasks[6].task_id = -2;
 
     index = find_slot_to_move_to(0, &p );
     assert(index == 3);
@@ -92,39 +89,6 @@ void test_find_slot_to_move_to(){
     printf("passed test_find_slot_to_move_to()\n");
 }
 
-void test_task_moving(){
-    long first_task_id;
-    long second_task_id;
-    struct PBS_Plan* plan = (struct PBS_Plan*) malloc(sizeof(struct PBS_Plan));
-    test_plan_parsing(plan);
-
-    plan->tasks[0].slot_owner = plan->tasks[1].task_id;
-    plan->tasks[1].process_id = 0;
-    preempt_cur_task(plan);
-}
-
-void test_insert_preempted_tasks() {
-    int i;
-    struct PBS_Plan p = {0};
-    setup_plan(&p);
-    struct PBS_Task* tasks = &p.tasks[0];
-
-    long order[5] = {0,1,2,3,4};
-    for( i = 0; i < 5; i++){
-        tasks[i].process_id = order [i];
-        tasks[i].task_id = order[i];
-    }
-
-    // 0-1-2-3-4 > 0-1-2-0-4
-    move_preempted_tasks(3,1,tasks, &p);
-
-    assert(tasks[3].task_id == 0);
-    assert(tasks[3].slot_owner == 4);
-    assert(tasks[4].task_id == 4);
-    assert(tasks[2].task_id == 2);
-
-    printf("passed test_insert_preempted_tasks()\n");
-}
 
 void test_preempt_cur_task(){
     struct PBS_Plan p = {0};
@@ -147,7 +111,7 @@ void test_preempt_cur_task(){
     p.tasks[3] = t;
     t = create_task(4,0, 4, 4);
     p.tasks[4] = t;
-
+    p.tasks[5].task_id = -2;
     preempt_cur_task(&p);
 
     assert(p.tasks[0].task_id == 1);
@@ -358,6 +322,11 @@ void test_reschedule(){
     assert(p.tasks[2].instructions_planned == (1000 * STRETCH_CONSTANT)/100);
 }
 
+/**
+ * Creating a plan with (0,0), (1,1), (2,0), FINISH
+ * Then run timer ticks
+ *
+ */
 void test_task_vs_slot_instructions(){
     long instructions_per_tick = INS_PER_TICK;
     struct PBS_Plan p = {};
@@ -503,6 +472,9 @@ void check_preempt_task(struct PBS_Plan *p){
 
     while(p->cur_task->task_id == t4_id){
         pbs_run_timer_tick(p);
+        if (p->tick_counter == 319){
+            printf("del");
+        }
     }
 
     new_addr_t4 = find_task_with_task_id(p, t4_id);
