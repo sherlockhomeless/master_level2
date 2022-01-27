@@ -158,7 +158,8 @@ void move_tasks(long insertion_slot, long stack_size, struct PBS_Plan *p) {
 
     // move other tasks forward
     for (i = p->index_cur_task; i < insertion_slot; i++) {
-        *(p->cur_task+i) = *(p->cur_task+i+stack_size);
+        insertion_slot_per_task = i + stack_size; // move to first task that is not of same pid
+        p->tasks[i] = p->tasks[insertion_slot_per_task];
     }
     // write preempted tasks to insertion slot
     for(i = 1; i <= stack_size; i++){
