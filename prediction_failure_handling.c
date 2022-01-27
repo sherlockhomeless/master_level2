@@ -9,7 +9,6 @@
 #include <stdio.h>
 
 
-int get_stack_size_preempted_tasks(struct PBS_Task *tasks_to_move, struct PBS_Plan* p);
 // --- debug ---
 void get_all_ids_from_plan(long[400], struct PBS_Plan*);
 short same_ids(long[400], long[400]);
@@ -29,16 +28,15 @@ short no_id_is_duplicated(struct PBS_Plan* p);
  * @param p
  */
 void preempt_cur_task(struct PBS_Plan* p){
-    assert(p->cur_task->task_id != -1);
+   assert(p->cur_task->task_id != -1);
    int stack_size;
    long insertion_slot;
-   struct PBS_Task preempted_tasks[T2_MAX_PREEMPTIONS+1] = {{0}};
    struct PBS_Task preempted_task = *p->cur_task;
 
     p->cur_task->was_preempted++;
     insertion_slot = find_slot_to_move_to(p->cur_task->process_id, p); // returns slot index before next task of same PID
     assert(insertion_slot > p->index_cur_task);
-    stack_size = get_stack_size_preempted_tasks(preempted_tasks, p);
+    stack_size = get_stack_size_preempted_tasks(p);
 
     if (insertion_slot == -2){
         handle_no_preemption_slot_found(p);
@@ -47,6 +45,7 @@ void preempt_cur_task(struct PBS_Plan* p){
 
     move_tasks(insertion_slot, stack_size, p);
     assert(no_id_is_duplicated(p));
+
     if(LOG_PBS)
         printf(KERN_INFO "[PBS_preempt_cur_task]%ld: Task %ld was preempted and moved into slot %ld before Task %ld\n", p->tick_counter, preempted_task.task_id,
                insertion_slot , p->tasks[insertion_slot+1].task_id);
@@ -104,29 +103,22 @@ EXPORT_SYMBOL(find_slot_to_move_to);
 /**
  * Checks what tasks have to be moved by the preemption, are stored in tasks-to_move
  * @param p current plan
- * @param tasks_to_move adresses of tasks that have to be moved
  * @returns the number of tasks that have to be moved
  */
-int get_stack_size_preempted_tasks(struct PBS_Task *tasks_to_move, struct PBS_Plan* p){
-    int i;
-    int index = 0;
-    struct PBS_Task* task_to_check = p->cur_task;
+int get_stack_size_preempted_tasks(struct PBS_Plan* p){
+    int i = 0;
+    struct PBS_Task *task_ptr = p->cur_task;
+    struct PBS_Task *preeempted_taks_ptr= p->cur_task;
 
-    //
-    while(task_to_check->slot_owner != task_to_check->task_id && task_to_check->process_id == p->cur_task->process_id){
-        tasks_to_move[index] = *(task_to_check);
-        index++;
-        task_to_check++;
+    int same_pid = 1;
+    int same_slot_owner = 1;
+
+    while(task_ptr->task_id != -2 && same_pid && same_slot_owner){
+        i++; task_ptr++;
+        same_pid = preeempted_taks_ptr->process_id == task_ptr->process_id;
+        same_slot_owner = preeempted_taks_ptr->slot_owner == task_ptr->slot_owner;
     }
-
-    // add slot that was previous slot owner
-    tasks_to_move[index] = *task_to_check;
-
-    for( i = 0; i<index; i++){
-        tasks_to_move[i].state = PLAN_TASK_PREEMPTED;
-    }
-
-    return index + 1;
+    return i;
 }
 
 EXPORT_SYMBOL(get_stack_size_preempted_tasks);
@@ -144,9 +136,7 @@ void move_tasks(long insertion_slot, long stack_size, struct PBS_Plan *p) {
     struct PBS_Task preempted_tasks [stack_size];
     long slot_id_for_preempted_tasks = p->tasks[insertion_slot + 1].task_id;
 
-
-    print_plan_state(p, p->index_cur_task, insertion_slot+1);
-    // save preempted tasks
+    // save preempted tasks to insert them later
     for (i = 0; i < stack_size; i++){
         preempted_tasks[i] = *(p->cur_task + i);
     }
@@ -170,8 +160,6 @@ void move_tasks(long insertion_slot, long stack_size, struct PBS_Plan *p) {
 
     // update
     update_cur_process(p);
-    print_plan_state(p, p->index_cur_task, insertion_slot);
-
 }
 EXPORT_SYMBOL(move_tasks);
 

@@ -30,6 +30,7 @@ void check_run_task_late_time(struct PBS_Plan *plan);
 void check_preempt_task(struct PBS_Plan *plan);
 void check_signal_t2_task(struct PBS_Plan *plan);
 
+
 // ### UNIT TESTS ####
 void run_unit_tests();
 void test_find_slot_to_move_to();
@@ -42,6 +43,8 @@ void test_preempt_cur_task();
 void test_reschedule();
 void test_task_vs_slot_instructions();
 void test_lateness_balancer();
+void test_get_stack_size_of_preempted_tasks();
+void check_t2_preemption();
 
 int test_run();
 int full_run();
@@ -67,6 +70,7 @@ void run_unit_tests(){
     test_reschedule();
     test_task_vs_slot_instructions();
     test_lateness_balancer();
+    test_get_stack_size_of_preempted_tasks();
 }
 
 void test_find_slot_to_move_to(){
@@ -379,6 +383,33 @@ void test_lateness_balancer(){
     assert(number_prediction_failures_caused() == 1);
     assert(p.lateness == 0);
 }
+
+void test_get_stack_size_of_preempted_tasks(){
+    struct PBS_Task t;
+    struct PBS_Plan p = {0};
+    setup_plan(&p);
+
+    // (tid, pid, slot) => (0,0,2), (1,0,2), (2,0,2), (3,1,3)
+    t = create_task(0,0, 0, 0);
+    t.slot_owner = 2;
+    p.tasks[0] = t;
+    t = create_task(1,0, 0, 0);
+    t.slot_owner = 2;
+    p.tasks[1] = t;
+    t = create_task(2,0, 0, 0);
+    t.slot_owner = 2;
+    p.tasks[2] = t;
+    t = create_task(3,1, 0, 0);
+    t.slot_owner = 3;
+    p.tasks[3] = t;
+    p.tasks[4].task_id = -2;
+
+    assert(get_stack_size_preempted_tasks(&p) == 3);
+
+
+
+}
+
 // ### TEST RUN ###
 // creates a plan, runs a couple of function to check if information tracking is working properly
 // then runs the full remaining plan to test if it can without any errors
@@ -472,9 +503,6 @@ void check_preempt_task(struct PBS_Plan *p){
 
     while(p->cur_task->task_id == t4_id){
         pbs_run_timer_tick(p);
-        if (p->tick_counter == 319){
-            printf("del");
-        }
     }
 
     new_addr_t4 = find_task_with_task_id(p, t4_id);
@@ -499,7 +527,7 @@ void check_thresholds(struct PBS_Plan* p){
     result = check_tm2_node(p);
 }
 /**
- * Tests if parsing of Plan works
+ * Tests if parsing of plan works
  * @param plan
  */
 void test_plan_parsing(struct PBS_Plan* plan){
@@ -556,12 +584,12 @@ int full_run(){
     struct PBS_Task* cur_task;
     struct PBS_Plan plan = {0};
     struct PBS_Plan* plan_ptr = &plan;
-    setup_plan(plan_ptr);
     test_plan_parsing(plan_ptr);
     while(plan_ptr->cur_task->task_id != -2) {
         assert(plan_ptr->cur_task->task_id != -1);
-        if (plan_ptr->tick_counter == 279)// 731 important
-            printf("del");
+        if (plan_ptr->tick_counter == 7427){
+            printf("DEL");
+        }
         pbs_run_timer_tick(plan_ptr);
     }
 

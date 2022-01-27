@@ -93,11 +93,10 @@ EXPORT_SYMBOL(schedule_task_finished);
  */
 void schedule_timer_tick(struct PBS_Plan *p){
     // --- check for t2 ---
-    if(p->stress <= 0) {
+    if(p->stress <= 0 || check_t2_preemptions(p->cur_task)) {
         if (check_t2_task(p) ||
             check_t2_process(p) ||
-            check_t2_node(p)   ||
-            check_t2_preemptions(p->cur_task)){
+            check_t2_node(p) ){
             signal_t2(p);
         }
     }
@@ -105,11 +104,14 @@ void schedule_timer_tick(struct PBS_Plan *p){
     // --- check for t1 ---
     if (check_t1(p)){
         preempt_cur_task(p);
+        if (p->cur_task->task_id == -1){
+            handle_free_slot(p);
+        }
         return;
     }
-    if(LOG_PBS)
-        printf(KERN_INFO "[schedule_timer_tick]%ld: (%ld,%ld) retired instructions %ld\n",
-               p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
+    if(LOG_PBS && 0)
+        printf(KERN_INFO "[schedule_timer_tick]%ld: (%ld,%ld) retired/real:%ld/%ld\n",
+               p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot, p->cur_task->instructions_real);
     if (p->stress)
         p->stress--;
 }

@@ -8,3 +8,5 @@ void preempt_cur_task(struct PBS_Plan* p);
 long find_slot_to_move_to(long target_pid, struct PBS_Plan* p);
 void move_preempted_tasks(long insertion_slot, int stack_size, struct PBS_Task* preempted_tasks,struct PBS_Plan *p);
 void move_tasks(long insertion_slot, long stack_size, struct PBS_Plan *p);
+int get_stack_size_preempted_tasks(struct PBS_Plan* p);
+
