@@ -35,13 +35,13 @@ void preempt_cur_task(struct PBS_Plan* p){
 
     p->cur_task->was_preempted++;
     insertion_slot = find_slot_to_move_to(p->cur_task->process_id, p); // returns slot index before next task of same PID
-    assert(insertion_slot > p->index_cur_task);
     stack_size = get_stack_size_preempted_tasks(p);
 
     if (insertion_slot == -2){
         handle_no_preemption_slot_found(p);
         return;
     }
+    assert(insertion_slot > p->index_cur_task);
 
     move_tasks(insertion_slot, stack_size, p);
     assert(no_id_is_duplicated(p));
