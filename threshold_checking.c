@@ -215,8 +215,8 @@ short check_tm2_node(struct PBS_Plan* p){
 
     if (p->lateness < tm2_node){
         if (LOG_PBS)
-            printf("[check_tm2_node]%ld: Tm2 triggered with node lateness %ld)\n", p->tick_counter,
-                   p->lateness);
+            printf("[check_tm2_node]%ld: Tm2 triggered, node-lateness %ld, tm2-node: %ld\n", p->tick_counter,
+                   p->lateness, tm2_node);
         return TM2;
     }
     else

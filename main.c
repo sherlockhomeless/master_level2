@@ -579,6 +579,8 @@ struct PBS_Task * run(struct PBS_Plan* p, struct PBS_Task* t){
 }
 
 int full_run(){
+    printf("----------------------\n");
+
     int i;
     struct PredictionFailureSignal*  sig;
     struct PBS_Task* cur_task;
@@ -587,12 +589,14 @@ int full_run(){
     test_plan_parsing(plan_ptr);
     while(plan_ptr->cur_task->task_id != -2) {
         assert(plan_ptr->cur_task->task_id != -1);
-        if (plan_ptr->tick_counter == 7427){
-            printf("DEL");
+        if (plan_ptr->tick_counter % 100 == 0 || plan_ptr->tick_counter == 130  ){
+            printf("DEL!!! node_lateness=%ld\n", plan_ptr->lateness);
         }
         pbs_run_timer_tick(plan_ptr);
     }
-
+    for (i = 0; i < 100; i++){
+        pbs_run_timer_tick(plan_ptr);
+    }
     print_signals();
     return 0;
 }

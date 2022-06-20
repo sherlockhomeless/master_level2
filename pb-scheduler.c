@@ -32,8 +32,8 @@ void pbs_run_timer_tick(struct PBS_Plan *p) {
         return;
     }
         if (LOG_PBS) {
-            printf(KERN_INFO "[pbs_run_timer_tick]%ld: ran tick, cur_task=%ld\n", p->tick_counter,
-                   p->cur_task->task_id);
+            printf(KERN_INFO "[pbs_run_timer_tick]%ld: cur_task (%ld, %ld)\n", p->tick_counter,
+                   p->cur_task->task_id, p->cur_task->process_id);
         }
 
     retired_instructions = get_retired_instructions();
