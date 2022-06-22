@@ -231,7 +231,7 @@ long calculate_tm2_node(struct PBS_Plan* p){
     lower_bound = (TM2_NODE_LOWER_BOUND * p->instructions_planned) / 100;
     tm2_node = tm2_node_relative > lower_bound ? tm2_node_relative : lower_bound;
     assert(tm2_node < 0);
-    return lower_bound;
+    return tm2_node;
 }
 EXPORT_SYMBOL(calculate_tm2_node);
 
