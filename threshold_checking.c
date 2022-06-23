@@ -22,9 +22,6 @@ long calculate_t1(struct PBS_Task* task){
     t1_minimum = task->instructions_planned + T1_NO_PREEMPTION;
     t1_relative = task->instructions_planned * T1_SIGMA;
     t1_maximum = task->instructions_planned + T1_NO_PREEMPTION;
-    if(LOG_PBS)
-        printf(KERN_INFO "[calculate_t1] task %ld: instructions_planned=%ld, t1_min=%ld, t1_relative=%ld, t1_max=%ld\n", task->task_id,
-               task->instructions_planned, t1_minimum, t1_relative, t1_maximum);
     if (t1_minimum > t1_relative)
         t1_relative = t1_minimum;
     if (t1_maximum > t1_relative) {
@@ -66,10 +63,6 @@ long calculate_t2_task(struct PBS_Plan *p) {
     t1 = calculate_t1(task);
     t2_task_min = (long) (t1 + T2_SPACER);
     t2_task_relative = (long) (task->instructions_planned * T2_SIGMA);
-    if(LOG_PBS)
-        printf(KERN_INFO "[PBS_calculate_t2_task] task %ld: instructions_planned=%ld, t2_task_min=%ld, t2_task_relative=%ld\n",
-               task->task_id, task->instructions_planned, t2_task_min, t2_task_relative);
-
     if (t2_task_min > t2_task_relative)
         t2_task = t2_task_min;
     else
@@ -156,6 +149,7 @@ EXPORT_SYMBOL(check_t2_node);
 long calculate_t2_node(struct PBS_Plan* p){
     long t2_node_min = p->num_processes * T2_PROCESS_MINIMUM;
     long t2_node_relative = ((p->instructions_planned * T2_NODE_LATENESS)/100) + (p->stress * T2_STRESS_GAIN) - RESCHEDULE_TIME;
+    t2_node_relative = t2_node_relative - p->instructions_planned;
     long t2_node = t2_node_relative < t2_node_min ? t2_node_min : t2_node_relative;
 
     assert(t2_node > 0); // is tm2 positive or negative?
@@ -183,7 +177,7 @@ short check_tm2_task(struct PBS_Plan* p){
 
     if (task->instructions_retired_slot < tm2_task && task->state == PLAN_TASK_FINISHED) {
         if (LOG_PBS)
-            printf("[check_tm2_task]%ld: Task %ld triggered tm2 with (%ld/%ld)\n", p->tick_counter,
+            printf("[check_tm2_task]%ld: Task %ld triggered tm2 with (plan: %ld, real: %ld)\n", p->tick_counter,
                    p->cur_task->task_id, p->cur_task->instructions_planned, p->cur_task->instructions_retired_task);
         return TM2;
     }
@@ -258,7 +252,7 @@ void print_thresholds(struct PBS_Plan* p){
     tm2_task = calculate_tm2_task(p->cur_task);
     tm2_node = calculate_t2_node(p);
 
-    printf("[print_thresholds]%ld: t1 = %ld, t2_task = %ld, t2_process_capacity = %ld"
+    printf("[print_thresholds]%ld: t1 = %ld, t2_task = %ld, t2_process_capacity = %ld "
            "t2_process_plan = %ld, t2_node = %ld, tm2_task = %ld, tm2_node = %ld\n", p->tick_counter, t1, t2_task,
            t2_process_capacity, t2_process_plan, t2_node, tm2_task, tm2_node);
 

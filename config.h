@@ -23,11 +23,12 @@
 // --- T2 ---
 #define T2_SIGMA (T1_SIGMA + 50) // percentage as int; max allowed deviation % of a task from its plan
 #define T2_SPACER (T1_MAX_TICKS_OFF * INS_PER_TICK ) // raw number instructions; Distance t1 -> t2_task
-#define T2_TASK_SIGNALING_LIMIT (PBS_HZ * INS_PER_TICK)// raw number instructions; t2_task max value TODO: Implement
+#define T2_TASK_SIGNALING_LIMIT (PBS_HZ * INS_PER_TICK)// raw number instructions; t2_task max value
 
 #define T2_CAPACITY_BUFFER 110 // percentage as int, underestimation of node computational capacity
 #define T2_ASSIGNABLE_PLAN_BUFFER 50 // Factor that describes what percentage of the buffer may be used up, e.g. 50 with a 1000 buffer means, that only a buffer of 500 may be used before a prediction failure will be send
-#define T2_PROCESS_MINIMUM ((long)(RESCHEDULE_TIME * 110)/100)
+//#define T2_PROCESS_MINIMUM ((long)(RESCHEDULE_TIME * 110)/100)
+#define T2_PROCESS_MINIMUM ((long)T2_TASK_SIGNALING_LIMIT)
 
 #define T2_NODE_LATENESS 110
 

@@ -22,8 +22,8 @@ void signal_t2(struct PBS_Plan* p){
 
     p->stress = STRESS_RESET;
 
-    sig.task_id = p->cur_task->task_id,
-            sig.process_id = p->cur_process->process_id;
+    sig.task_id = p->cur_task->task_id;
+    sig.process_id = p->cur_process->process_id;
     sig.tick = p->tick_counter;
     sig.type_signal = T2;
 
@@ -79,8 +79,15 @@ void reschedule(struct PBS_Plan *p, short signal, long target_pid) {
         cur_task++;
     }
     balance_lateness(p);
-    if (LOG_PBS)
-        printf(KERN_DEBUG "[reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
+    if (LOG_PBS){
+
+        if (stretch_factor == STRETCH_CONSTANT)
+            printf(KERN_DEBUG "[reschedule]%ld: Received T2 signal and stretched %ld tasks\n", p->tick_counter, task_counter);
+        else
+            printf(KERN_DEBUG "[reschedule]%ld: Received Tm2 signal and shrunk %ld tasks\n", p->tick_counter,  task_counter);
+
+
+    }
     if (LOG_PBS)
         print_thresholds(p);
 }

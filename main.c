@@ -12,7 +12,7 @@
 #include "prediction_failure_handling.h"
 #include "prediction_failure_signaling.h"
 #include "config.h"
-
+#include "defense.h"
 /** TODO @ALL: Define here what Plan to run **/
 
 const char* PLAN_PATH = "/home/ml/Dropbox/Master-Arbeit/code/level2/test/plan.log";
@@ -55,6 +55,7 @@ struct PBS_Task * run(struct PBS_Plan *p, struct PBS_Task* t);
 int main(){
     run_unit_tests();
     test_run();
+    run_defense();
     return full_run();
 }
 
@@ -589,8 +590,8 @@ int full_run(){
     test_plan_parsing(plan_ptr);
     while(plan_ptr->cur_task->task_id != -2) {
         assert(plan_ptr->cur_task->task_id != -1);
-        if (plan_ptr->tick_counter % 100 == 0 || plan_ptr->tick_counter == 130  ){
-            printf("DEL!!! node_lateness=%ld\n", plan_ptr->lateness);
+        if (plan_ptr->tick_counter == 361){
+            printf("I AM HERE FOR PRESENTATIONAL PURPOSES\n");
         }
         pbs_run_timer_tick(plan_ptr);
     }
